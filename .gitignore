@@ -1,0 +1,37 @@
+# Local interview preparation may contain personal information.
+interview/*
+
+# CMake build directories and generated files.
+build/
+build-*/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+CTestTestfile.cmake
+Makefile
+cmake_install.cmake
+compile_commands.json
+
+# Compiled C/C++ artifacts.
+*.a
+*.dll
+*.dylib
+*.exe
+*.lib
+*.o
+*.obj
+*.pdb
+*.so
+
+# Test and coverage output.
+Testing/
+*.gcda
+*.gcno
+*.gcov
+
+# Common editor and operating-system temporary files.
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db

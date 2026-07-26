@@ -1,0 +1,530 @@
+SILICON SWITCH LAB: IMPLEMENTATION AND INTERVIEW ROADMAP
+=======================================================
+
+1. PROJECT OUTCOME
+==================
+
+Build a cross-platform, hardware-inspired network switch/router in C++20 with:
+
+- Ethernet frame parsing and serialization
+- Virtual ports and 802.1Q VLAN membership
+- MAC learning, known-unicast forwarding, and unknown-unicast flooding
+- ARP/neighbor state
+- IPv4 forwarding with TTL handling and longest-prefix matching
+- Next-hop and ECMP groups
+- ACL-style match/action rules
+- Bounded ingress/egress queues, counters, and explicit congestion drops
+- A SAI-inspired control API
+- Desired-state and observed-state reconciliation
+- Python configuration, test, and traffic tools
+- Deterministic simulation plus a distributed UDP transport
+- Unit, integration, concurrency, fault-injection, and benchmark suites
+
+This is an educational project, not a production switch and not an
+implementation of Cisco proprietary technology.
+
+
+2. WHY THIS PROJECT FITS THE POSITION
+====================================
+
+The role asks for modern C++, Python, full SDLC, debugging, testing,
+hardware/software collaboration, network operating systems/APIs, L2/L3
+networking, and performance awareness. This project makes each area observable:
+
+Job area                 Project evidence
+-----------------------  ------------------------------------------------------
+Modern C++               Typed packets/tables, RAII, STL, threads, ownership
+Python                   Scenario runner, config CLI, test and log automation
+L2 networking            MAC learning, VLANs, flooding, Ethernet parsing
+L3 networking            ARP, IPv4, LPM, TTL, routes, next hops, ECMP
+Silicon SDK concepts     Hardware interface and software-ASIC implementation
+SAI concepts             Vendor-neutral object and control API
+Hardware constraints     Table capacity, queues, counters, partial operations
+Debugging                Traces, counter trees, sanitizers, failure injection
+Performance              Benchmarks, profiling, cache/data-layout experiments
+SDLC                     Requirements, ADRs, tests, releases, compatibility
+AI/ML infrastructure     Optional flow telemetry anomaly detector
+
+
+3. ARCHITECTURE
+===============
+
+3.1 Data plane
+--------------
+
+Packet enters virtual port
+  -> validate frame length
+  -> parse Ethernet and optional VLAN header
+  -> determine ingress VLAN
+  -> learn source MAC
+  -> apply ingress ACL
+  -> bridge lookup or IPv4 route lookup
+  -> select egress port/next hop
+  -> rewrite required headers
+  -> enqueue in bounded egress queue
+  -> schedule and transmit
+  -> update stage-specific counters
+
+Core C++ types:
+
+- MacAddress, Ipv4Address, Ipv4Prefix
+- EthernetFrame, ArpPacket, Ipv4Packet
+- PortId, VlanId, RouteId, NextHopId
+- MacTable, NeighborTable, RouteTable, AclTable
+- BoundedQueue<T>, VirtualPort, PacketPipeline
+- HardwareInterface, SoftwareAsic
+
+Important invariants:
+
+- Packet reads never exceed available bytes.
+- Multi-byte wire values have explicit byte-order conversion.
+- Every table has an explicit capacity.
+- A route prefix is normalized when created.
+- No hardware operation silently partially succeeds.
+- Queue drops identify a reason and increment the matching counter.
+- The control plane does not hold its state lock across a slow hardware call.
+
+3.2 Control plane
+-----------------
+
+The control plane holds desired state. A SAI-inspired interface maps portable
+objects to the HardwareInterface. A reconciliation loop compares desired state
+with observed hardware state after restart, injected failure, or drift.
+
+Operations:
+
+- create/remove port
+- create/remove VLAN and VLAN membership
+- create/update/remove route
+- create/update/remove next hop and neighbor
+- create/remove ACL rule
+- read counters and resource usage
+- dump desired and observed state
+- reconcile
+
+Every mutation defines:
+
+- input validation
+- idempotency behavior
+- dependency behavior
+- resource-exhaustion behavior
+- completion/error result
+- rollback or forward-reconciliation behavior
+
+3.3 Python layer
+----------------
+
+Python tools will:
+
+- load a topology from JSON
+- configure ports, VLANs, routes, and ACLs
+- generate deterministic traffic scenarios
+- poll counters with deadlines
+- compare expected and observed hardware state
+- collect logs from multiple computers
+- output machine-readable test reports
+- run performance experiments
+
+3.4 Distributed transport
+-------------------------
+
+Each virtual port can connect to a UDP endpoint. A small envelope carries:
+
+- protocol version
+- switch/port identity
+- sequence number
+- payload length
+- checksum
+- serialized Ethernet frame
+
+UDP is transport for the lab, not a replacement for the simulated Ethernet
+behavior. The envelope is removed before the frame enters the data plane.
+
+
+4. FOUR-COMPUTER LAB
+====================
+
+Recommended initial topology:
+
+Linux desktop
+  - Runs the SoftwareAsic process.
+  - Runs profiling and high-load tests.
+  - Optionally hosts Linux network namespaces in a later milestone.
+
+Linux laptop
+  - Runs traffic generator A.
+  - Captures received virtual frames and validates ordering/loss.
+  - Runs tcpdump/Wireshark for the UDP lab transport when useful.
+
+Windows laptop 1
+  - Runs Python control client.
+  - Applies topology and route updates.
+  - Collects counters and state snapshots.
+
+Windows laptop 2
+  - Runs traffic generator B.
+  - Injects malformed traffic, disconnects, and delayed/reordered updates.
+  - Confirms Windows portability.
+
+Safety and practicality:
+
+- Begin on a trusted private LAN.
+- Bind control and data sockets only to explicitly configured interfaces.
+- Do not expose the lab control service to the public internet.
+- Use non-privileged UDP ports.
+- Add authentication before any non-lab deployment.
+- Keep the deterministic single-machine mode as the primary correctness test.
+
+
+5. MILESTONES
+=============
+
+M0: Requirements and skeleton
+-----------------------------
+
+Deliverables:
+- README and architecture plan
+- Standalone CMake project
+- Warning-clean C++20 build on Linux and Windows
+- Test executable with no external test dependency
+- CI-ready build presets
+
+Interview skills:
+- Requirement clarification
+- Architecture boundaries
+- Portability
+- Full-SDLC planning
+
+Exit criteria:
+- Configure, build, and test commands work on Linux and Windows.
+
+M1: Safe packet and address types
+---------------------------------
+
+Deliverables:
+- MacAddress, Ipv4Address, and Ipv4Prefix value types
+- Validated parsing and formatting
+- Explicit byte-order helpers
+- Ethernet and IPv4 parser with malformed-input tests
+
+Interview skills:
+- C++ lifetime and value semantics
+- const correctness
+- bounds checking
+- alignment and endianness
+- undefined behavior avoidance
+
+Questions to answer:
+- Why return a value or optional/result instead of a raw pointer?
+- Why not reinterpret_cast an arbitrary byte buffer?
+- What is network byte order?
+- How do integer overflow and malformed lengths affect parsing?
+
+M2: L2 switching
+----------------
+
+Deliverables:
+- Ports and VLAN membership
+- Capacity-bounded MAC table
+- Source learning and aging
+- Known-unicast forwarding
+- Unknown-unicast and broadcast flooding
+- Per-port and per-drop-reason counters
+
+Interview skills:
+- Ethernet, MAC learning, VLANs
+- hash table behavior
+- iterator invalidation
+- finite hardware resources
+- deterministic tests
+
+Questions to answer:
+- How does a switch learn a MAC address?
+- Why is VLAN part of the lookup key?
+- What happens when the MAC table is full?
+- How do you age entries without invalid lifetime references?
+
+M3: L3 routing
+--------------
+
+Deliverables:
+- ARP/neighbor table
+- IPv4 validation and TTL handling
+- Route and next-hop objects
+- Longest-prefix match
+- Ethernet rewrite on routed hops
+- ICMP/error event representation
+
+Interview skills:
+- same-subnet versus routed forwarding
+- ARP, routing tables, LPM, TTL
+- trie versus linear/table lookup
+- dependency management
+
+Questions to answer:
+- Which addresses change at each hop?
+- Why does a host ARP for its gateway?
+- How does longest-prefix matching work?
+- What happens if the route exists but the neighbor does not?
+
+M4: Queues, concurrency, and scheduling
+---------------------------------------
+
+Deliverables:
+- Thread-safe bounded queue
+- Explicit close/shutdown semantics
+- Worker threads and scoped ownership
+- FIFO and weighted round-robin scheduling
+- Congestion and queue-occupancy counters
+- ThreadSanitizer stress tests on Linux
+
+Interview skills:
+- mutexes, atomics, condition variables
+- producer/consumer design
+- deadlock and data-race prevention
+- latency versus throughput
+- buffering and head-of-line blocking
+
+Questions to answer:
+- Which invariant does each mutex protect?
+- Why must condition-variable predicates be rechecked?
+- How do shutdown and a full queue interact?
+- Where can batching help or hurt?
+
+M5: SAI-inspired API and software SDK
+-------------------------------------
+
+Deliverables:
+- HardwareInterface abstract class
+- SoftwareAsic implementation
+- Typed resource and error model
+- Route/VLAN/ACL programming API
+- Desired and observed state dumps
+- Fault injection after any programming step
+- Idempotent reconciliation
+
+Interview skills:
+- runtime polymorphism
+- API/ABI design
+- partial failure and rollback
+- SDK/SAI/NOS conceptual relationship
+- testing before hardware availability
+
+Questions to answer:
+- Why use runtime polymorphism at this boundary?
+- How do standard objects map to vendor-specific resources?
+- How do you recover from a process crash during an update?
+- How do you verify hardware rather than trusting a successful call?
+
+M6: Python automation
+---------------------
+
+Deliverables:
+- JSON topology loader
+- Scenario runner and CLI
+- Deadline-based counter polling
+- Desired/observed state comparison
+- Multi-node log collector
+- JUnit/JSON reports
+
+Interview skills:
+- Python data structures and generators
+- context managers and cleanup
+- subprocess/network error handling
+- test automation
+
+Questions to answer:
+- How do you distinguish test failure from infrastructure failure?
+- How do you guarantee cleanup after an exception?
+- How do you process logs larger than memory?
+
+M7: Distributed four-machine lab
+--------------------------------
+
+Deliverables:
+- UDP virtual-port transport
+- versioned and validated envelope
+- endpoint discovery/configuration
+- sequence/loss/reordering telemetry
+- repeatable multi-computer scenarios
+- deployment and troubleshooting guide
+
+Interview skills:
+- TCP versus UDP
+- serialization
+- compatibility and versioning
+- distributed observability
+- deployment and operations
+
+Questions to answer:
+- Why is UDP appropriate for this lab transport?
+- How do you identify loss versus reordering?
+- How do you roll out a protocol-version change?
+- What happens when one endpoint disappears?
+
+M8: Performance and optimization
+--------------------------------
+
+Deliverables:
+- Reproducible packet and route-update benchmarks
+- profiler captures
+- AoS versus SoA experiment
+- allocation and batching experiment
+- cache-aware LPM improvement
+- before/after performance report
+
+Interview skills:
+- profiling
+- cache locality and alignment
+- latency versus throughput
+- evidence-based optimization
+
+Questions to answer:
+- What was the measured bottleneck?
+- Which workload is representative?
+- What correctness tests protect the optimization?
+- What tradeoff did the optimization introduce?
+
+M9: Production-quality exercise
+-------------------------------
+
+Deliverables:
+- Structured logs and counter hierarchy
+- configuration validation
+- graceful shutdown and restart
+- state checkpoint/reconciliation
+- fault-injection matrix
+- release checklist and postmortem
+
+Interview skills:
+- complete SDLC
+- operational readiness
+- difficult debugging stories
+- staged changes and rollback
+
+M10: Optional AI/ML infrastructure extension
+--------------------------------------------
+
+Deliverables:
+- flow/queue telemetry exporter
+- offline anomaly detection prototype
+- controlled comparison against rule-based thresholds
+- explicit false-positive and compute-cost analysis
+
+This is optional. It should not displace core C++, networking, or reliability
+work. Its value is demonstrating that AI/ML is applied to an infrastructure
+problem with measurable operational criteria.
+
+
+6. TEST STRATEGY
+================
+
+Unit tests:
+- address/prefix boundaries
+- valid and malformed packet parsing
+- MAC learning and aging
+- LPM overlap and default route
+- queue boundaries and shutdown
+- serialization round trips
+
+Integration tests:
+- two-host same-VLAN forwarding
+- inter-VLAN routing
+- ACL permit/drop/count
+- unresolved neighbor then resolution
+- route replacement while traffic flows
+- state drift followed by reconciliation
+
+Fault-injection tests:
+- fail before and after each table operation
+- full MAC, route, ACL, and queue resources
+- corrupt or truncated packet
+- duplicate/out-of-order control operation
+- endpoint loss and restart
+- process restart with stale observed state
+
+Concurrency tests:
+- multiple producers and consumers
+- concurrent route updates and reads
+- shutdown under full and empty queues
+- repeated stress under ThreadSanitizer
+
+Performance tests:
+- packets per second
+- forwarding latency distribution
+- route updates per second
+- lookup latency versus route-table size
+- queue contention versus worker count
+- allocation count and memory footprint
+
+
+7. INTERVIEW STORY OUTPUTS
+==========================
+
+By the end of the project, prepare these evidence-backed stories:
+
+1. Requirements-to-release story:
+   Trace one feature from requirement and design through tests and deployment.
+
+2. Difficult C++ bug:
+   Use a real parser, lifetime, invalidation, or concurrency defect found here.
+
+3. Performance optimization:
+   Present profiler evidence and before/after benchmark results.
+
+4. Hardware/software mismatch:
+   Use an injected desired/observed state divergence and reconciliation.
+
+5. Resource exhaustion:
+   Explain table-full or queue-full behavior and why it is safe.
+
+6. Cross-functional design:
+   Explain the contract between control plane, hardware interface, and data plane.
+
+7. Failed approach:
+   Document an idea that measurements or testing disproved.
+
+8. Portability:
+   Explain a Linux/Windows difference and how the interface isolated it.
+
+
+8. DEFINITION OF DONE
+=====================
+
+The complete project is done when:
+
+- It builds and runs on Linux and Windows from documented commands.
+- One process can run deterministic end-to-end L2 and L3 scenarios.
+- Four machines can exchange virtual frames through configured UDP ports.
+- Tables and queues enforce configurable resource limits.
+- Desired/observed state drift can be injected, detected, and repaired.
+- Unit, integration, fault, concurrency, and performance tests are repeatable.
+- Results include counters, traces, and machine-readable reports.
+- At least one optimization has credible before/after evidence.
+- Documentation explains architecture, decisions, limitations, and operations.
+- You can answer the milestone questions without memorized scripts because you
+  implemented and measured the relevant behavior.
+
+
+9. FIRST IMPLEMENTATION SESSION
+===============================
+
+Build M0 and M1:
+
+1. Create standalone CMake targets: library, CLI, and tests.
+2. Add strict compiler warnings.
+3. Implement MacAddress, Ipv4Address, and Ipv4Prefix.
+4. Test parsing, formatting, prefix normalization, and matching.
+5. Add byte-order helpers and explain every conversion.
+6. Implement safe Ethernet parsing without unsafe buffer casts.
+7. Run tests on one Windows and one Linux computer.
+
+Questions you should be able to answer after this session:
+
+- What owns every object?
+- Which operations can fail, and how is failure represented?
+- What is undefined behavior in a naive packet parser?
+- What changes between host and network byte order?
+- Why is a value type useful for an address?
+- Which tests establish that malformed input is safe?
+

@@ -1,0 +1,17 @@
+#include "network/ipv4_address_test.hpp"
+#include "network/mac_address_test.hpp"
+#include "silicon_switch/version.hpp"
+#include "test_support.hpp"
+
+#include <string_view>
+
+int main() {
+    silicon_switch::test::TestSuite suite;
+
+    suite.expect_equal(
+        silicon_switch::version(), std::string_view{"0.1.0"}, "library version");
+    silicon_switch::test::run_mac_address_tests(suite);
+    silicon_switch::test::run_ipv4_address_tests(suite);
+
+    return suite.exit_code();
+}
