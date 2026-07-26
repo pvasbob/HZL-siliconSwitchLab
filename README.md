@@ -181,7 +181,7 @@ With the default multi-configuration Visual Studio generator, run:
 Single-configuration generators such as Ninja may place the executables directly
 under `build` instead.
 
-## Available three-computer lab
+## Available four-computer lab
 
 The distributed design targets the computers currently available:
 
@@ -190,6 +190,10 @@ The distributed design targets the computers currently available:
   - Runs the `SoftwareAsic` switch process
   - Runs deterministic simulations, sanitizers, profiling, stress tests, and
     high-load benchmarks
+- **Linux laptop**
+  - Runs the first traffic generator and packet/counter observer
+  - Captures received virtual frames and validates ordering and loss
+  - Uses tools such as tcpdump or Wireshark to inspect the UDP lab transport
 - **Windows laptop 1**
   - Runs the Python control-plane client and scenario tools
   - Applies topology, VLAN, route, and ACL configuration
@@ -267,7 +271,8 @@ The completed project will include:
 - Malformed-packet and resource-exhaustion tests
 - Fault injection around hardware-programming operations
 - Concurrency stress tests and Linux ThreadSanitizer runs
-- Cross-platform tests on the Linux desktop and both Windows laptops
+- Distributed and cross-platform tests on both Linux computers and both Windows
+  laptops
 - Reproducible throughput, latency, lookup, and update benchmarks
 
 Every discovered defect should result in a retained regression test.
