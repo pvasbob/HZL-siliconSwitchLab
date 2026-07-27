@@ -1,35 +1,97 @@
 # Silicon Switch Lab
 
-Silicon Switch Lab is a cross-platform C++20 and Python learning project that
-models the software stack surrounding a programmable network ASIC. It is being
-built as practical preparation for a Cisco Silicon One software-engineering
-interview, with an emphasis on modern C++, networking fundamentals,
-hardware-aware design, testing, debugging, and measurable performance.
+Silicon Switch Lab is a cross-platform C++20, Python, CUDA, OpenGL, and
+networking project that models the software stack surrounding a programmable
+network ASIC and uses that stack to support a distributed GPU visualization
+application. It is being built as practical preparation for a Cisco Silicon One
+software-engineering interview, with an emphasis on modern C++, L2/L3
+networking, hardware-aware design, testing, debugging, and measurable
+performance.
 
 This is an educational software switch/router. It is not production networking
 software and does not implement Cisco proprietary technology.
 
-## Project goals
+## Final product goal
 
-The completed system will model the path from network configuration to packet
-forwarding:
+The final product is a distributed GPU simulation studio for a four-computer
+engineering team:
+
+- One Linux desktop with a CUDA-capable GPU runs and modifies the authoritative
+  simulation.
+- The Linux desktop also presents the leader's OpenGL view.
+- One Linux laptop and two Windows laptops run read-only OpenGL observer
+  applications.
+- Every observer receives synchronized scene state and can render the same
+  simulation from an independently controlled camera.
+- The observer computers do not need CUDA or a high-performance discrete GPU;
+  they render a capability-appropriate representation of results computed on
+  the Linux GPU server.
 
 ```text
-Python scenarios and configuration CLI
-                |
-Control plane and SAI-inspired API
-                |
-Hardware abstraction and state reconciliation
-                |
-C++ forwarding pipeline ("software ASIC")
-                |
-Virtual ports, queues, counters, and packet traces
+                         Linux GPU desktop
+               +----------------------------------+
+               | Leader controls and OpenGL view |
+               | Authoritative simulation server |
+               | CPU reference / CUDA backend    |
+               | Scene snapshot publisher        |
+               +----------------+-----------------+
+                                |
+                    Versioned scene protocol
+                                |
+                       SoftwareAsic network
+                                |
+             +------------------+------------------+
+             |                  |                  |
+             v                  v                  v
+      Linux laptop       Windows laptop 1   Windows laptop 2
+      OpenGL observer    OpenGL observer    OpenGL observer
 ```
 
-The first versions run deterministically within one process. A later milestone
-will add a versioned UDP transport so the simulated switch, control client, and
-traffic endpoints can run across the available Linux and Windows computers
-without requiring raw-socket privileges.
+This gives the network stack a concrete workload. GPU-generated scene snapshots
+must be serialized, switched or routed, queued, measured, delivered, and
+resynchronized across heterogeneous computers.
+
+The project answers a practical engineering question:
+
+> How can one GPU workstation run an expensive simulation while a distributed
+> team safely observes synchronized results on ordinary Linux and Windows
+> computers, with explicit behavior under bandwidth limits, congestion, packet
+> loss, endpoint failure, and state divergence?
+
+## System architecture
+
+The completed system will model the complete path from network configuration
+and GPU computation to distributed visualization:
+
+```text
+Python deployment, configuration, scenarios, and reports
+                            |
+             Desired-state control plane
+                            |
+                  SAI-inspired API
+                            |
+                  HardwareInterface
+                    /             \
+                   v               v
+             SoftwareAsic   FaultInjectingHardware
+                            |
+           L2/L3 forwarding, queues, and counters
+                            |
+              Versioned scene-state protocol
+                            |
+       Authoritative CPU/CUDA simulation server
+                            |
+             OpenGL leader and observers
+```
+
+The simulation core, switch core, networking protocol, and renderer remain
+separate components. Correctness tests can run headlessly without CUDA, OpenGL,
+or a physical multi-computer lab.
+
+The first networking versions run deterministically within one process. A later
+milestone will add a versioned UDP transport so the simulated switch, control
+client, simulation server, and observers can run across the available Linux and
+Windows computers without requiring raw-socket privileges.
 
 ## Current implementation
 
@@ -82,7 +144,17 @@ Later milestones will add:
 - Python topology, configuration, traffic, and report tools
 - A distributed UDP virtual-port transport
 - Unit, integration, concurrency, fault-injection, and benchmark suites
-- An optional CUDA batch-processing performance experiment
+- A deterministic headless simulation core
+- A CPU reference simulation backend
+- An optional CUDA simulation backend on the Linux GPU desktop
+- CPU/GPU correctness comparison and performance measurement
+- Versioned full-scene snapshots and incremental scene updates
+- Scene revision, sequence, timestamp, and resynchronization handling
+- Linux and Windows OpenGL observer applications
+- Independent and leader-following camera modes
+- Capability negotiation and level-of-detail selection for observer computers
+- Bandwidth-aware sampling, quantization, or compression experiments
+- An optional encoded-video fallback for scenes too large to replicate
 
 See [PROJECT_PLAN.txt](PROJECT_PLAN.txt) for the detailed roadmap, exit criteria,
 test strategy, and interview-question mapping.
@@ -126,7 +198,10 @@ into oversized source files.
   C++20-capable compiler
 
 Python will become a runtime requirement when the automation milestone begins.
-CUDA will remain optional and will never be required for the core switch.
+CUDA will remain optional and will never be required for the core switch, CPU
+reference simulation, or observer applications. Later visualization milestones
+will introduce an OpenGL-capable windowing library and OpenGL function loader as
+explicit, documented dependencies.
 
 ## Build and test on Linux
 
@@ -188,23 +263,68 @@ The distributed design targets the computers currently available:
 - **Linux desktop**
   - Primary development and correctness environment
   - Runs the `SoftwareAsic` switch process
+  - Runs the authoritative simulation server and CUDA backend
+  - Runs the leader's OpenGL controls and visualization
+  - Publishes versioned scene snapshots to observers
   - Runs deterministic simulations, sanitizers, profiling, stress tests, and
     high-load benchmarks
 - **Linux laptop**
+  - Runs a read-only OpenGL observer with an independent camera
   - Runs the first traffic generator and packet/counter observer
-  - Captures received virtual frames and validates ordering and loss
+  - Validates scene ordering, loss, interpolation, and resynchronization
   - Uses tools such as tcpdump or Wireshark to inspect the UDP lab transport
 - **Windows laptop 1**
-  - Runs the Python control-plane client and scenario tools
+  - Runs a read-only OpenGL observer
+  - Runs the Python control-plane client and scenario tools when required
   - Applies topology, VLAN, route, and ACL configuration
   - Collects counters and desired/observed-state snapshots
 - **Windows laptop 2**
-  - Runs traffic endpoints and compatibility tests
-  - Injects malformed traffic, endpoint failures, delays, and reordered updates
+  - Runs a read-only OpenGL observer
+  - Runs traffic endpoints, compatibility tests, and fault scenarios
+  - Injects malformed traffic, endpoint failures, scene-update delays, and
+    reordered updates
 
 Roles will remain configurable. Multiple endpoint processes can run on one
 machine when a scenario needs more logical hosts, and the deterministic
 single-computer mode remains the primary correctness environment.
+
+## Distributed scene model
+
+OpenGL contexts are local to each process and cannot be shared directly across
+the network. The Linux server therefore publishes logical scene state rather
+than attempting to share its OpenGL context.
+
+```text
+Static data loaded by every client:
+    shaders, meshes, textures, topology, and scene metadata
+
+Dynamic data published by the server:
+    object transforms, particle samples, colors, simulation time,
+    scene revision, and visualization mode
+```
+
+The Linux server is authoritative. Observer applications are read-only with
+respect to simulation state, though they may control local cameras. A
+presentation mode will allow observers to follow the leader's camera.
+
+Every scene update will carry a protocol version, session identity, sequence
+number, simulation tick, timestamp, revision, payload length, and integrity
+check. A client that detects a missing revision stops applying dependent deltas
+and requests a complete snapshot before resuming.
+
+For very large GPU simulations, the server will not transmit every particle at
+every rendered frame. The project will measure and compare approaches such as:
+
+- Reduced snapshot frequency with client interpolation
+- Particle sampling and level of detail
+- Quantized positions and attributes
+- Full snapshots versus incremental deltas
+- Compression
+- Per-client quality selection
+- Encoded video as an optional fallback
+
+The goal is to make CPU/GPU/network tradeoffs observable rather than assuming
+that one transport strategy is universally best.
 
 ## Networking model
 
@@ -255,6 +375,8 @@ fit the design:
 - `constexpr`, comparison operators, and compile-time validation
 - Abstract base classes and runtime polymorphism at hardware/transport
   boundaries
+- Move-only RAII wrappers for OpenGL and CUDA resources
+- `std::variant` messages and visitors for the scene/network protocol
 - Threads, mutexes, condition variables, atomics, and explicit shutdown
 - Cache-aware data layout and measurement-driven optimization
 
@@ -268,12 +390,16 @@ The completed project will include:
 
 - Unit tests for value types, parsing, tables, queues, and serialization
 - Integration tests for same-VLAN switching and inter-VLAN routing
+- Deterministic CPU simulation and CPU/GPU comparison tests
+- Scene-protocol serialization, revision-gap, and resynchronization tests
+- Cross-platform OpenGL capability and rendering smoke tests
 - Malformed-packet and resource-exhaustion tests
 - Fault injection around hardware-programming operations
 - Concurrency stress tests and Linux ThreadSanitizer runs
 - Distributed and cross-platform tests on both Linux computers and both Windows
   laptops
-- Reproducible throughput, latency, lookup, and update benchmarks
+- Reproducible forwarding, simulation, serialization, snapshot-bandwidth,
+  latency, lookup, and update benchmarks
 
 Every discovered defect should result in a retained regression test.
 
@@ -290,6 +416,10 @@ Every discovered defect should result in a retained regression test.
 7. Optimizations must remain protected by correctness tests.
 8. The project documents limitations honestly and does not claim production
    Cisco hardware experience.
+9. OpenGL remains an observer of authoritative state and never becomes a
+   dependency of forwarding correctness.
+10. CUDA acceleration remains optional and is always checked against a CPU
+    reference implementation.
 
 ## Safety and scope
 
@@ -298,3 +428,25 @@ and data sockets will bind to explicitly configured interfaces and use
 non-privileged ports. The educational control service should not be exposed to
 the public Internet without adding appropriate authentication and transport
 security.
+
+## Definition of final success
+
+The final project is successful when:
+
+- One Linux GPU workstation can run and modify an authoritative simulation.
+- Three Linux/Windows observer applications display synchronized OpenGL views.
+- Observers can use independent cameras or follow the leader's camera.
+- The CPU and CUDA simulation backends agree within defined correctness
+  tolerances.
+- Scene transport detects loss, reordering, stale sessions, and revision gaps.
+- Disconnected observers can reconnect and obtain a consistent full snapshot.
+- Scene traffic passes through the software ASIC's L2/L3 forwarding pipeline.
+- VLANs, IPv4 routes, bounded queues, counters, congestion, and failures affect
+  traffic in explicitly tested ways.
+- The SAI-inspired control plane can inject, detect, and reconcile
+  desired/observed-state divergence.
+- Python tools can deploy the four-computer lab, run scenarios, collect logs,
+  and produce machine-readable reports.
+- Sanitizer, fault-injection, and cross-platform test suites are repeatable.
+- CPU, GPU, rendering, serialization, and networking performance claims are
+  supported by reproducible measurements.

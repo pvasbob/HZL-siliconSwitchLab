@@ -75,7 +75,7 @@ An inline function may have identical definitions in multiple translation units.
 Worker::do_work() is implicitly inline because it is defined inside the class definition.
 A constexpr function is implicitly inline.
 A function template is normally defined in a heade.
-    Its definition must generally be visible where the compiler instantiates it.
+    The compiler usually needs to see the complete template definition at the point where it creates a concrete specialization.
 
 
 Multiple identical definitions across translation units are permitted for categories including:
@@ -103,3 +103,4 @@ Ordinary non-inline, non-template functions with external linkage require one de
 
 ==========================
 
+CIDR stands for Classless Inter-Domain Routing.
