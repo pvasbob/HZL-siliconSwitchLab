@@ -1,5 +1,5 @@
 # Local interview preparation may contain personal information.
-docs/*
+docs/
 
 # CMake build directories and generated files.
 build/
