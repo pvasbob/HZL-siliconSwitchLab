@@ -113,22 +113,40 @@ The project currently provides:
   - four-octet and packed 32-bit representations
   - equality and numeric ordering
   - unspecified, loopback, multicast, and limited-broadcast classification
+- A validated `Ipv4Prefix` value type
+  - CIDR parsing and canonical formatting
+  - network-address normalization
+  - subnet-mask and last-address calculation
+  - address membership checks
+  - `/0` default-route and `/32` host-route support
+- Header-only C++20 big-endian byte-order utilities
+  - constrained unsigned-integer templates
+  - checked reads and all-or-nothing writes
+  - 8-, 16-, 32-, and 64-bit wire values
+  - host-endianness-independent behavior
+- A strongly typed `EtherType` representation
+  - named IPv4, ARP, 802.1Q VLAN, and IPv6 values
+  - preservation of unknown protocol identifiers
+- An owning, validated `EthernetFrame` value type
+  - destination and source MAC addresses
+  - EtherType and variable-size payload
+  - checked parsing from non-owning byte spans
+  - serialization into network byte order
+  - rejection of truncated headers and oversized payloads
 - Tests for valid input, malformed input, boundary values, representation,
-  formatting, classification, and comparisons
+  formatting, classification, byte order, ownership, and serialization
 
-The current test executable runs 59 checks.
+The current test executable runs 109 checks.
 
-The next component is `Ipv4Prefix`, which will introduce subnet masks, prefix
-normalization, address membership, and the foundation for longest-prefix route
-matching.
+The next component is IEEE 802.1Q VLAN tag support, including a validated VLAN
+identifier and tagged Ethernet-frame parsing and serialization.
 
 ## Planned capabilities
 
 Later milestones will add:
 
-- IPv4 prefixes and longest-prefix matching
-- Explicit host/network-byte-order helpers
-- Safe Ethernet, VLAN, ARP, and IPv4 parsing and serialization
+- Longest-prefix route matching
+- Safe VLAN, ARP, and IPv4 parsing and serialization
 - Virtual ports and IEEE 802.1Q VLAN membership
 - Capacity-bounded MAC learning and aging
 - Known-unicast forwarding and unknown-unicast/broadcast flooding
