@@ -2,6 +2,7 @@
 
 #include "silicon_switch/network/ether_type.hpp"
 #include "silicon_switch/network/mac_address.hpp"
+#include "silicon_switch/network/vlan_tag.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -16,13 +17,15 @@ public:
     using Payload = std::vector<std::uint8_t>;
 
     static constexpr std::size_t header_size = 14U;
+    static constexpr std::size_t tagged_header_size = 18U;
     static constexpr std::size_t maximum_payload_size = 1500U;
 
     [[nodiscard]] static std::optional<EthernetFrame> create(
         MacAddress destination,
         MacAddress source,
         EtherType ether_type,
-        Payload payload);
+        Payload payload,
+        std::optional<VlanTag> vlan_tag = std::nullopt);
 
     [[nodiscard]] static std::optional<EthernetFrame>
     parse(std::span<const std::uint8_t> bytes);
@@ -41,6 +44,10 @@ public:
         return ether_type_;
     }
 
+    [[nodiscard]] const std::optional<VlanTag>& vlan_tag() const noexcept {
+        return vlan_tag_;
+    }
+
     [[nodiscard]] const Payload& payload() const noexcept {
         return payload_;
     }
@@ -55,12 +62,14 @@ private:
         MacAddress source,
         EtherType ether_type,
         Payload payload,
+        std::optional<VlanTag> vlan_tag,
         ValidatedTag);
 
     MacAddress destination_;
     MacAddress source_;
     EtherType ether_type_;
     Payload payload_;
+    std::optional<VlanTag> vlan_tag_;
 };
 
 }  // namespace silicon_switch::network

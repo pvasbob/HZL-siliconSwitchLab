@@ -3,6 +3,7 @@
 #include "network/ipv4_address_test.hpp"
 #include "network/ipv4_prefix_test.hpp"
 #include "network/mac_address_test.hpp"
+#include "network/vlan_test.hpp"
 #include "silicon_switch/version.hpp"
 #include "test_support.hpp"
 
@@ -18,6 +19,7 @@ int main() {
     silicon_switch::test::run_mac_address_tests(suite);
     silicon_switch::test::run_ipv4_address_tests(suite);
     silicon_switch::test::run_ipv4_prefix_tests(suite);
+    silicon_switch::test::run_vlan_tests(suite);
 
     return suite.exit_code();
 }

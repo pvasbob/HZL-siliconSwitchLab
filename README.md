@@ -1,5 +1,13 @@
 # Silicon Switch Lab
 
+> **Project status: IN PROGRESS**
+>
+> The repository is being developed incrementally. The
+> [Current implementation](#current-implementation) section identifies what
+> works today; the [Final product goal](#final-product-goal) and
+> [Definition of final success](#definition-of-final-success) describe the
+> intended completed system.
+
 Silicon Switch Lab is a cross-platform C++20, Python, CUDA, OpenGL, and
 networking project that models the software stack surrounding a programmable
 network ASIC and uses that stack to support a distributed GPU visualization
@@ -10,6 +18,49 @@ performance.
 
 This is an educational software switch/router. It is not production networking
 software and does not implement Cisco proprietary technology.
+
+## What the finished project will accomplish
+
+The completed project will let one Linux workstation run an authoritative
+CPU/CUDA simulation while four independently built Linux and Windows
+applications display synchronized OpenGL views of the same evolving scene. The
+GPU workstation will control the simulation; the other computers will be
+read-only observers with independent or leader-following cameras.
+
+Scene updates will not bypass the networking work. They will be serialized into
+a versioned protocol and carried through a hardware-inspired `SoftwareAsic`
+that implements Ethernet and VLAN parsing, MAC learning, L2 switching, ARP,
+IPv4 routing, longest-prefix matching, next hops, ACLs, bounded queues,
+congestion drops, and counters. Loss, reordering, disconnection, hardware
+failure, and state divergence will be detectable and testable.
+
+A SAI-inspired control layer and `HardwareInterface` class hierarchy will
+separate portable control-plane intent from the software-ASIC and
+fault-injecting hardware implementations. Python tools will configure the
+four-computer lab, run repeatable scenarios, collect telemetry, and generate
+machine-readable reports. A deterministic CPU backend will serve as the
+correctness reference for optional CUDA acceleration, and headless tests will
+keep networking correctness independent of the GPU and OpenGL renderer.
+
+The final demonstration will show this complete path:
+
+```text
+Leader changes simulation state on Linux GPU workstation
+        |
+CPU/CUDA backend produces authoritative scene revision
+        |
+Versioned scene update is serialized
+        |
+SoftwareAsic switches or routes it through tested L2/L3 behavior
+        |
+Linux and Windows observers validate and apply the revision
+        |
+Four OpenGL windows render the synchronized scene
+```
+
+The engineering evidence will include cross-platform builds, unit and
+integration tests, fault injection, sanitizer runs, profiling, and reproducible
+CPU, GPU, rendering, serialization, and networking measurements.
 
 ## Final product goal
 
@@ -93,6 +144,18 @@ milestone will add a versioned UDP transport so the simulated switch, control
 client, simulation server, and observers can run across the available Linux and
 Windows computers without requiring raw-socket privileges.
 
+Python will integrate with the C++ system through two explicit boundaries:
+
+- Subprocess automation will build, launch, monitor, and stop C++ services and
+  observer applications while collecting logs and test artifacts.
+- A versioned socket control protocol will configure the long-running C++
+  `SoftwareAsic`, query state and counters, and run scenarios locally or across
+  the four-computer lab.
+
+The forwarding path and authoritative switch state remain in C++. Python does
+not become an in-process dependency of packet processing, and direct Python/C++
+bindings or an embedded interpreter are not required by the current design.
+
 ## Current implementation
 
 The project currently provides:
@@ -133,20 +196,33 @@ The project currently provides:
   - checked parsing from non-owning byte spans
   - serialization into network byte order
   - rejection of truncated headers and oversized payloads
+- Validated IEEE 802.1Q VLAN value types
+  - configurable VLAN identifiers from 1 through 4094
+  - three-bit Priority Code Point and Drop Eligible Indicator
+  - 16-bit Tag Control Information encoding and decoding
+  - explicit rejection of reserved or unsupported VLAN identifiers
+- VLAN-aware Ethernet frames
+  - support for both 14-byte untagged and 18-byte tagged headers
+  - automatic `0x8100` Tag Protocol Identifier serialization
+  - inner EtherType preservation
+  - checked tagged-frame parsing and serialization
+  - rejection of truncated and malformed VLAN tags
 - Tests for valid input, malformed input, boundary values, representation,
-  formatting, classification, byte order, ownership, and serialization
+  formatting, classification, byte order, ownership, VLAN bit fields, and
+  tagged/untagged serialization
 
-The current test executable runs 109 checks.
+The current test executable runs 127 checks.
 
-The next component is IEEE 802.1Q VLAN tag support, including a validated VLAN
-identifier and tagged Ethernet-frame parsing and serialization.
+The next component is a validated IPv4 packet representation with safe header
+parsing, total-length checks, checksum calculation, and serialization. It will
+provide the packet foundation for later Layer 3 routing.
 
 ## Planned capabilities
 
 Later milestones will add:
 
 - Longest-prefix route matching
-- Safe VLAN, ARP, and IPv4 parsing and serialization
+- Safe ARP and IPv4 parsing and serialization
 - Virtual ports and IEEE 802.1Q VLAN membership
 - Capacity-bounded MAC learning and aging
 - Known-unicast forwarding and unknown-unicast/broadcast flooding

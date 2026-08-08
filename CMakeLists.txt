@@ -39,6 +39,7 @@ add_executable(silicon_switch_tests
     tests/network/ipv4_address_test.cpp
     tests/network/ipv4_prefix_test.cpp
     tests/network/mac_address_test.cpp
+    tests/network/vlan_test.cpp
     tests/test_main.cpp
 )
 
