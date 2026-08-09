@@ -207,11 +207,17 @@ The project currently provides:
   - inner EtherType preservation
   - checked tagged-frame parsing and serialization
   - rejection of truncated and malformed VLAN tags
+- Strongly typed IPv4 protocol identifiers for ICMP, TCP, and UDP
+- Reusable Internet-checksum utilities
+  - checksum generation for IPv4 headers before transmission
+  - validation of received headers containing a stored checksum
+  - correct one's-complement carry folding
+  - support for both even- and odd-length byte sequences
 - Tests for valid input, malformed input, boundary values, representation,
-  formatting, classification, byte order, ownership, VLAN bit fields, and
-  tagged/untagged serialization
+  formatting, classification, byte order, ownership, VLAN bit fields,
+  tagged/untagged serialization, and Internet checksums
 
-The current test executable runs 127 checks.
+The current test executable runs 134 checks.
 
 The next component is a validated IPv4 packet representation with safe header
 parsing, total-length checks, checksum calculation, and serialization. It will

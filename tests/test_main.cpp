@@ -1,5 +1,6 @@
 #include "network/byte_order_test.hpp"
 #include "network/ethernet_frame_test.hpp"
+#include "network/internet_checksum_test.hpp"
 #include "network/ipv4_address_test.hpp"
 #include "network/ipv4_prefix_test.hpp"
 #include "network/mac_address_test.hpp"
@@ -16,6 +17,7 @@ int main() {
         silicon_switch::version(), std::string_view{"0.1.0"}, "library version");
     silicon_switch::test::run_byte_order_tests(suite);
     silicon_switch::test::run_ethernet_frame_tests(suite);
+    silicon_switch::test::run_internet_checksum_tests(suite);
     silicon_switch::test::run_mac_address_tests(suite);
     silicon_switch::test::run_ipv4_address_tests(suite);
     silicon_switch::test::run_ipv4_prefix_tests(suite);

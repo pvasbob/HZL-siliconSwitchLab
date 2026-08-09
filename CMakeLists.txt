@@ -13,6 +13,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(silicon_switch
     src/silicon_switch/network/ethernet_frame.cpp
+    src/silicon_switch/network/internet_checksum.cpp
     src/silicon_switch/network/ipv4_address.cpp
     src/silicon_switch/network/ipv4_prefix.cpp
     src/silicon_switch/network/mac_address.cpp
@@ -36,6 +37,7 @@ target_link_libraries(silicon_switch_cli
 add_executable(silicon_switch_tests
     tests/network/byte_order_test.cpp
     tests/network/ethernet_frame_test.cpp
+    tests/network/internet_checksum_test.cpp
     tests/network/ipv4_address_test.cpp
     tests/network/ipv4_prefix_test.cpp
     tests/network/mac_address_test.cpp
