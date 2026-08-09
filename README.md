@@ -213,15 +213,22 @@ The project currently provides:
   - validation of received headers containing a stored checksum
   - correct one's-complement carry folding
   - support for both even- and odd-length byte sequences
+- An owning, validated `Ipv4Packet` value type
+  - creation, checked parsing, and network-byte-order serialization
+  - fixed 20-byte IPv4 headers with source, destination, protocol, TTL,
+    identification, and Don't Fragment fields
+  - automatic total-length and header-checksum generation
+  - checksum, length, version, TTL, and fragmentation validation
+  - explicit rejection of unsupported IPv4 options and fragmented packets
 - Tests for valid input, malformed input, boundary values, representation,
   formatting, classification, byte order, ownership, VLAN bit fields,
-  tagged/untagged serialization, and Internet checksums
+  tagged/untagged serialization, Internet checksums, and IPv4 packet
+  round trips
 
-The current test executable runs 134 checks.
+The current test executable runs 158 checks.
 
-The next component is a validated IPv4 packet representation with safe header
-parsing, total-length checks, checksum calculation, and serialization. It will
-provide the packet foundation for later Layer 3 routing.
+The next milestone will build IPv4 forwarding primitives on this packet
+foundation, including controlled TTL updates and longest-prefix route lookup.
 
 ## Planned capabilities
 

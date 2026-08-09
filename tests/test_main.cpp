@@ -2,6 +2,7 @@
 #include "network/ethernet_frame_test.hpp"
 #include "network/internet_checksum_test.hpp"
 #include "network/ipv4_address_test.hpp"
+#include "network/ipv4_packet_test.hpp"
 #include "network/ipv4_prefix_test.hpp"
 #include "network/mac_address_test.hpp"
 #include "network/vlan_test.hpp"
@@ -20,6 +21,7 @@ int main() {
     silicon_switch::test::run_internet_checksum_tests(suite);
     silicon_switch::test::run_mac_address_tests(suite);
     silicon_switch::test::run_ipv4_address_tests(suite);
+    silicon_switch::test::run_ipv4_packet_tests(suite);
     silicon_switch::test::run_ipv4_prefix_tests(suite);
     silicon_switch::test::run_vlan_tests(suite);
 

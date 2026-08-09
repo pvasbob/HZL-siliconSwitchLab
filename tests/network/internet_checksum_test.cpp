@@ -23,6 +23,9 @@ void run_internet_checksum_tests(TestSuite& suite) {
     static_assert(static_cast<std::uint8_t>(IpProtocol::udp) == 17U);
     suite.expect_true(true, "define standard IPv4 protocol identifiers");
 
+    // Based on the template argument, each array element is a std::uint8_t, 
+    // an unsigned integer type with exactly 8 bits. The initializer literals 
+    // are normally unsigned int, but they are converted to std::uint8_t when stored.
     constexpr std::array<std::uint8_t, 20> header_without_checksum{
         0x45U, 0x00U, 0x00U, 0x73U,
         0x00U, 0x00U, 0x40U, 0x00U,
