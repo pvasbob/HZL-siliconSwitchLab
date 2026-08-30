@@ -159,6 +159,53 @@ void run_mac_table_tests(TestSuite& suite) {
     }
     suite.expect_true(rejected_zero_capacity,
                       "reject zero MAC table capacity");
+
+    switching::MacTable aging_table{4U, 10s};
+    suite.expect_equal(aging_table.entry_lifetime(),
+                       switching::MacTable::Duration{10s},
+                       "store dynamic MAC entry lifetime");
+    suite.expect_equal(
+        aging_table.learn(vlan(10U), host, port(1U), start),
+        switching::MacTableUpdate::inserted,
+        "learn MAC for aging");
+    suite.expect_equal(
+        aging_table.add_static(vlan(10U), static_host, port(2U)),
+        switching::MacTableUpdate::inserted,
+        "configure static MAC for aging");
+    suite.expect_equal(aging_table.expire(start + 9s), std::size_t{0U},
+                       "retain dynamic MAC before aging boundary");
+    suite.expect_equal(aging_table.expire(start + 10s), std::size_t{1U},
+                       "expire dynamic MAC at aging boundary");
+    suite.expect_false(aging_table.lookup(vlan(10U), host).has_value(),
+                       "aged dynamic MAC is absent");
+    suite.expect_true(aging_table.lookup(vlan(10U), static_host).has_value(),
+                      "retain static MAC during aging");
+    suite.expect_equal(aging_table.expire(start + 100s), std::size_t{0U},
+                       "never expire static MAC entry");
+
+    suite.expect_equal(
+        aging_table.learn(vlan(10U), host, port(1U), start),
+        switching::MacTableUpdate::inserted,
+        "relearn dynamic MAC for refresh aging");
+    suite.expect_equal(
+        aging_table.learn(vlan(10U), host, port(1U), start + 8s),
+        switching::MacTableUpdate::refreshed,
+        "refresh dynamic MAC aging timestamp");
+    suite.expect_equal(aging_table.expire(start + 10s), std::size_t{0U},
+                       "refreshed MAC survives original aging boundary");
+    suite.expect_equal(aging_table.expire(start + 18s), std::size_t{1U},
+                       "refreshed MAC expires at new aging boundary");
+
+    bool rejected_zero_lifetime = false;
+    try {
+        const switching::MacTable invalid_lifetime_table{
+            1U, switching::MacTable::Duration::zero()};
+        static_cast<void>(invalid_lifetime_table);
+    } catch (const std::invalid_argument&) {
+        rejected_zero_lifetime = true;
+    }
+    suite.expect_true(rejected_zero_lifetime,
+                      "reject nonpositive MAC entry lifetime");
 }
 
 }  // namespace silicon_switch::test

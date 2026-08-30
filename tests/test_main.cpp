@@ -15,6 +15,8 @@
 #include "routing/l3_ethernet_encapsulation_test.hpp"
 #include "silicon_switch/version.hpp"
 #include "switching/mac_table_test.hpp"
+#include "switching/vlan_ingress_test.hpp"
+#include "switching/vlan_port_config_test.hpp"
 #include "test_support.hpp"
 
 #include <string_view>
@@ -40,6 +42,8 @@ int main() {
     silicon_switch::test::run_ipv4_ttl_tests(suite);
     silicon_switch::test::run_l3_ethernet_encapsulation_tests(suite);
     silicon_switch::test::run_mac_table_tests(suite);
+    silicon_switch::test::run_vlan_port_config_tests(suite);
+    silicon_switch::test::run_vlan_ingress_tests(suite);
 
     return suite.exit_code();
 }

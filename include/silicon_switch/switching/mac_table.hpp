@@ -69,9 +69,14 @@ private:
 class MacTable {
 public:
     using Clock = MacTableEntry::Clock;
+    using Duration = Clock::duration;
     using TimePoint = MacTableEntry::TimePoint;
 
-    explicit MacTable(std::size_t capacity);
+    inline static constexpr std::chrono::seconds default_entry_lifetime{300};
+
+    explicit MacTable(
+        std::size_t capacity,
+        Duration entry_lifetime = default_entry_lifetime);
 
     [[nodiscard]] MacTableUpdate learn(
         const network::VlanId& vlan,
@@ -97,8 +102,14 @@ public:
         const network::VlanId& vlan,
         const network::MacAddress& mac_address);
 
+    [[nodiscard]] std::size_t expire(TimePoint now);
+
     [[nodiscard]] constexpr std::size_t capacity() const noexcept {
         return capacity_;
+    }
+
+    [[nodiscard]] constexpr Duration entry_lifetime() const noexcept {
+        return entry_lifetime_;
     }
 
     [[nodiscard]] std::size_t size() const noexcept {
@@ -126,6 +137,7 @@ private:
         TimePoint learned_at);
 
     std::size_t capacity_;
+    Duration entry_lifetime_;
     std::map<Key, MacTableEntry, KeyLess> entries_;
 };
 

@@ -17,9 +17,15 @@ namespace {
 
 }  // namespace
 
-MacTable::MacTable(const std::size_t capacity) : capacity_{capacity} {
+MacTable::MacTable(
+    const std::size_t capacity,
+    const Duration entry_lifetime)
+    : capacity_{capacity}, entry_lifetime_{entry_lifetime} {
     if (capacity_ == 0U) {
         throw std::invalid_argument{"MAC table capacity must be positive"};
+    }
+    if (entry_lifetime_ <= Duration::zero()) {
+        throw std::invalid_argument{"MAC entry lifetime must be positive"};
     }
 }
 
@@ -73,6 +79,23 @@ bool MacTable::remove(
     const network::VlanId& vlan,
     const network::MacAddress& mac_address) {
     return entries_.erase(Key{vlan, mac_address}) != 0U;
+}
+
+std::size_t MacTable::expire(const TimePoint now) {
+    std::size_t removed = 0U;
+    for (auto entry = entries_.begin(); entry != entries_.end();) {
+        const bool expired =
+            !entry->second.is_static() &&
+            now >= entry->second.learned_at() &&
+            now - entry->second.learned_at() >= entry_lifetime_;
+        if (expired) {
+            entry = entries_.erase(entry);
+            ++removed;
+        } else {
+            ++entry;
+        }
+    }
+    return removed;
 }
 
 bool MacTable::KeyLess::operator()(

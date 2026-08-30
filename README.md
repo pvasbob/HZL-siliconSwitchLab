@@ -273,23 +273,34 @@ The project currently provides:
   - reports insertion, refresh, movement, capacity exhaustion, invalid source,
     and static-conflict outcomes
   - preserves independent mappings for identical MAC addresses across VLANs
-  - accepts deterministic learning timestamps for later aging
+  - expires dynamic entries after a configurable monotonic-clock lifetime while
+    retaining static entries
+  - refresh and movement update deterministic learning timestamps
+- Validated VLAN port configuration
+  - models access ports with one access VLAN
+  - models trunks with allowed VLAN sets and optional native VLANs
+  - rejects empty trunk VLAN sets and native VLANs outside the allowed set
+- VLAN-aware ingress classification
+  - assigns untagged access traffic to the access VLAN
+  - accepts allowed tagged trunk traffic and maps untagged trunk traffic to the
+    configured native VLAN
+  - reports tagged-access, missing-native-VLAN, and disallowed-VLAN drops
+  - preserves the input Ethernet frame
 - Tests for valid input, malformed input, boundary values, representation,
   formatting, classification, byte order, ownership, VLAN bit fields,
   tagged/untagged serialization, Internet checksums, and IPv4 packet
   round trips
 
-The current test executable runs 363 checks.
+The current test executable runs 407 checks.
 
-The next milestone will add MAC-entry aging, expiring dynamic entries while
-retaining static entries.
+The next milestone will add Layer 2 forwarding decisions for known unicast,
+unknown unicast, broadcast flooding, and ingress-port filtering.
 
 ## Planned capabilities
 
 Later milestones will add:
 
 - Virtual ports and IEEE 802.1Q VLAN membership
-- Capacity-bounded MAC learning and aging
 - Known-unicast forwarding and unknown-unicast/broadcast flooding
 - ARP/neighbor state and IPv4 routing
 - Route, next-hop, and ECMP objects

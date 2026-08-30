@@ -25,6 +25,8 @@ add_library(silicon_switch
     src/silicon_switch/routing/ipv4_ttl.cpp
     src/silicon_switch/routing/l3_ethernet_encapsulation.cpp
     src/silicon_switch/switching/mac_table.cpp
+    src/silicon_switch/switching/vlan_ingress.cpp
+    src/silicon_switch/switching/vlan_port_config.cpp
     src/silicon_switch/version.cpp
 )
 
@@ -59,6 +61,8 @@ add_executable(silicon_switch_tests
     tests/routing/ipv4_ttl_test.cpp
     tests/routing/l3_ethernet_encapsulation_test.cpp
     tests/switching/mac_table_test.cpp
+    tests/switching/vlan_ingress_test.cpp
+    tests/switching/vlan_port_config_test.cpp
     tests/test_main.cpp
 )
 
