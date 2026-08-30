@@ -260,15 +260,29 @@ The project currently provides:
   - selects the configured gateway for indirect routes and the packet
     destination for directly connected routes
   - returns explicit forwarded or TTL-expired/route-miss outcomes
+- Layer 3 IPv4-to-Ethernet encapsulation
+  - resolves direct or gateway next hops through the aging-aware ARP cache
+  - uses the router egress MAC as source and resolved neighbor MAC as
+    destination
+  - constructs a fresh untagged IPv4 Ethernet frame without mutating its input
+  - reports invalid source MAC, unresolved neighbor, and oversized packet
+    failures explicitly
+- A capacity-bounded, VLAN-aware `MacTable`
+  - keys entries by VLAN and MAC address
+  - distinguishes dynamic and static entries
+  - reports insertion, refresh, movement, capacity exhaustion, invalid source,
+    and static-conflict outcomes
+  - preserves independent mappings for identical MAC addresses across VLANs
+  - accepts deterministic learning timestamps for later aging
 - Tests for valid input, malformed input, boundary values, representation,
   formatting, classification, byte order, ownership, VLAN bit fields,
   tagged/untagged serialization, Internet checksums, and IPv4 packet
   round trips
 
-The current test executable runs 307 checks.
+The current test executable runs 363 checks.
 
-The next milestone will add Layer 3 Ethernet encapsulation using the router's
-source MAC address and the ARP-resolved next-hop destination MAC address.
+The next milestone will add MAC-entry aging, expiring dynamic entries while
+retaining static entries.
 
 ## Planned capabilities
 

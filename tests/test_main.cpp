@@ -12,7 +12,9 @@
 #include "routing/ipv4_forwarding_result_test.hpp"
 #include "routing/ipv4_route_table_test.hpp"
 #include "routing/ipv4_ttl_test.hpp"
+#include "routing/l3_ethernet_encapsulation_test.hpp"
 #include "silicon_switch/version.hpp"
+#include "switching/mac_table_test.hpp"
 #include "test_support.hpp"
 
 #include <string_view>
@@ -36,6 +38,8 @@ int main() {
     silicon_switch::test::run_ipv4_forwarding_result_tests(suite);
     silicon_switch::test::run_ipv4_route_table_tests(suite);
     silicon_switch::test::run_ipv4_ttl_tests(suite);
+    silicon_switch::test::run_l3_ethernet_encapsulation_tests(suite);
+    silicon_switch::test::run_mac_table_tests(suite);
 
     return suite.exit_code();
 }
