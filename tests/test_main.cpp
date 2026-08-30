@@ -1,3 +1,6 @@
+#include "asic/bounded_queue_test.hpp"
+#include "asic/fault_injector_test.hpp"
+#include "asic/traffic_statistics_test.hpp"
 #include "network/arp_packet_test.hpp"
 #include "network/byte_order_test.hpp"
 #include "network/ethernet_frame_test.hpp"
@@ -29,6 +32,9 @@ int main() {
 
     suite.expect_equal(
         silicon_switch::version(), std::string_view{"0.1.0"}, "library version");
+    silicon_switch::test::run_bounded_queue_tests(suite);
+    silicon_switch::test::run_fault_injector_tests(suite);
+    silicon_switch::test::run_traffic_statistics_tests(suite);
     silicon_switch::test::run_arp_packet_tests(suite);
     silicon_switch::test::run_byte_order_tests(suite);
     silicon_switch::test::run_ethernet_frame_tests(suite);
@@ -53,3 +59,6 @@ int main() {
 
     return suite.exit_code();
 }
+#include "asic/bounded_queue_test.hpp"
+#include "asic/fault_injector_test.hpp"
+#include "asic/traffic_statistics_test.hpp"

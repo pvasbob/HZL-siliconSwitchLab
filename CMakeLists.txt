@@ -7,11 +7,15 @@ project(
     LANGUAGES CXX
 )
 
+find_package(Threads REQUIRED)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(silicon_switch
+    src/silicon_switch/asic/fault_injector.cpp
+    src/silicon_switch/asic/traffic_statistics.cpp
     src/silicon_switch/network/arp_packet.cpp
     src/silicon_switch/network/ethernet_frame.cpp
     src/silicon_switch/network/internet_checksum.cpp
@@ -48,6 +52,9 @@ target_link_libraries(silicon_switch_cli
 )
 
 add_executable(silicon_switch_tests
+    tests/asic/bounded_queue_test.cpp
+    tests/asic/fault_injector_test.cpp
+    tests/asic/traffic_statistics_test.cpp
     tests/network/arp_packet_test.cpp
     tests/network/byte_order_test.cpp
     tests/network/ethernet_frame_test.cpp
@@ -80,6 +87,7 @@ target_include_directories(silicon_switch_tests
 target_link_libraries(silicon_switch_tests
     PRIVATE
         silicon_switch
+        Threads::Threads
 )
 
 function(enable_strict_warnings target_name)

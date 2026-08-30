@@ -303,15 +303,30 @@ The project currently provides:
     MTU, and VLAN configuration
   - records receive/transmit packets, bytes, errors, and drops
   - rejects invalid MAC addresses and MTU values
+- A thread-safe generic `BoundedQueue`
+  - reports enqueued, full, and closed outcomes explicitly
+  - supports nonblocking and blocking FIFO dequeue
+  - wakes waiting consumers during idempotent close and permits queued items to
+    drain after shutdown
+  - supports move-only values and rejects zero capacity
+- Atomic traffic counters and immutable snapshots
+  - track packets, bytes, parse errors, route misses, TTL expiration, VLAN and
+    neighbor drops, filtering, congestion, injected faults, and exhaustion
+  - support concurrent relaxed-atomic updates and explicit reset
+- A deterministic fault-injection framework
+  - simulates failed ports, periodic packet loss, packet corruption, latency,
+    and resource exhaustion
+  - reports latency without sleeping and supports reproducible sequence reset
+  - validates configuration and preserves unaffected packets and ports
 - Tests for valid input, malformed input, boundary values, representation,
   formatting, classification, byte order, ownership, VLAN bit fields,
   tagged/untagged serialization, Internet checksums, and IPv4 packet
   round trips
 
-The current test executable runs 462 checks.
+The current test executable runs 512 checks.
 
-The next milestone will add bounded packet queues with explicit congestion-drop
-behavior and close/shutdown semantics.
+The next milestone will introduce the ASIC interface hierarchy, separating a
+runtime-polymorphic switch contract from software and mock implementations.
 
 ## Planned capabilities
 
@@ -320,11 +335,9 @@ Later milestones will add:
 - ARP/neighbor state and IPv4 routing
 - Route, next-hop, and ECMP objects
 - ACL-style match/action rules
-- Bounded ingress and egress queues
-- Per-stage counters and explicit congestion-drop reasons
 - Thread-safe worker pipelines and graceful shutdown
 - A SAI-inspired hardware interface
-- A `SoftwareAsic` implementation and fault-injecting hardware model
+- A `SoftwareAsic` implementation with integrated fault injection
 - Desired-state and observed-state reconciliation
 - Python topology, configuration, traffic, and report tools
 - A distributed UDP virtual-port transport
