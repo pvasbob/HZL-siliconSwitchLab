@@ -4,7 +4,7 @@ SILICON SWITCH LAB: IMPLEMENTATION AND INTERVIEW ROADMAP
 1. PROJECT OUTCOME
 ==================
 
-Build a cross-platform, hardware-inspired network switch/router in C++20 with:
+Build a cross-platform, hardware-inspired network switch/router in C++17 with:
 
 - Ethernet frame parsing and serialization
 - Virtual ports and 802.1Q VLAN membership
@@ -21,15 +21,16 @@ Build a cross-platform, hardware-inspired network switch/router in C++20 with:
 - Unit, integration, concurrency, fault-injection, and benchmark suites
 
 This is an educational project, not a production switch and not an
-implementation of Cisco proprietary technology.
+implementation of any vendor's proprietary technology.
 
 
-2. WHY THIS PROJECT FITS THE POSITION
-====================================
+2. PROFESSIONAL SKILLS DEMONSTRATED
+===================================
 
-The role asks for modern C++, Python, full SDLC, debugging, testing,
-hardware/software collaboration, network operating systems/APIs, L2/L3
-networking, and performance awareness. This project makes each area observable:
+The project develops and demonstrates modern C++, Python, full-SDLC practice,
+debugging, testing, hardware/software collaboration, network operating
+systems/APIs, L2/L3 networking, and performance awareness. It makes each area
+observable:
 
 Job area                 Project evidence
 -----------------------  ------------------------------------------------------
@@ -185,7 +186,7 @@ M0: Requirements and skeleton
 Deliverables:
 - README and architecture plan
 - Standalone CMake project
-- Warning-clean C++20 build on Linux and Windows
+- Warning-clean C++17 build on Linux and Windows
 - Test executable with no external test dependency
 - CI-ready build presets
 
@@ -527,4 +528,3 @@ Questions you should be able to answer after this session:
 - What changes between host and network byte order?
 - Why is a value type useful for an address?
 - Which tests establish that malformed input is safe?
-

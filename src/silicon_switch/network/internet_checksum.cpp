@@ -2,7 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <span>
+#include "silicon_switch/network/byte_span.hpp"
 
 namespace silicon_switch::network {
 namespace {
@@ -15,7 +15,7 @@ namespace {
 }  // namespace
 
 std::uint16_t compute_internet_checksum(
-    const std::span<const std::uint8_t> bytes) noexcept {
+    const ByteView bytes) noexcept {
     std::uint32_t sum = 0U;
     std::size_t offset = 0U;
 
@@ -38,7 +38,7 @@ std::uint16_t compute_internet_checksum(
 }
 
 bool has_valid_internet_checksum(
-    const std::span<const std::uint8_t> bytes) noexcept {
+    const ByteView bytes) noexcept {
     return !bytes.empty() && compute_internet_checksum(bytes) == 0U;
 }
 

@@ -8,16 +8,16 @@
 > [Definition of final success](#definition-of-final-success) describe the
 > intended completed system.
 
-Silicon Switch Lab is a cross-platform C++20, Python, CUDA, OpenGL, and
+Silicon Switch Lab is a cross-platform C++17, Python, CUDA, OpenGL, and
 networking project that models the software stack surrounding a programmable
 network ASIC and uses that stack to support a distributed GPU visualization
-application. It is being built as practical preparation for a Cisco Silicon One
-software-engineering interview, with an emphasis on modern C++, L2/L3
-networking, hardware-aware design, testing, debugging, and measurable
+application. It is being built as a general systems-engineering portfolio and
+learning project, with an emphasis on modern C++, L2/L3 networking,
+hardware-aware design, distributed systems, testing, debugging, and measurable
 performance.
 
 This is an educational software switch/router. It is not production networking
-software and does not implement Cisco proprietary technology.
+software and does not implement any vendor's proprietary technology.
 
 ## What the finished project will accomplish
 
@@ -160,7 +160,7 @@ bindings or an embedded interpreter are not required by the current design.
 
 The project currently provides:
 
-- A standalone CMake-based C++20 build
+- A standalone CMake-based C++17 build
 - A reusable `silicon_switch` static library
 - A small CLI linked against the library
 - A dependency-free unit-test executable registered with CTest
@@ -182,7 +182,7 @@ The project currently provides:
   - subnet-mask and last-address calculation
   - address membership checks
   - `/0` default-route and `/32` host-route support
-- Header-only C++20 big-endian byte-order utilities
+- Header-only C++17 big-endian byte-order utilities
   - constrained unsigned-integer templates
   - checked reads and all-or-nothing writes
   - 8-, 16-, 32-, and 64-bit wire values
@@ -220,15 +220,21 @@ The project currently provides:
   - automatic total-length and header-checksum generation
   - checksum, length, version, TTL, and fragmentation validation
   - explicit rejection of unsupported IPv4 options and fragmented packets
+- Explicit IPv4 forwarding result types
+  - `ForwardedIpv4Packet` owns the resulting packet and identifies its output
+    port and resolved next-hop address
+  - `DroppedIpv4Packet` reports a typed TTL-expired or route-miss reason
+  - `Ipv4ForwardingResult` uses `std::variant` so callers must handle either
+    forwarding or dropping without null pointers or ambiguous sentinel values
 - Tests for valid input, malformed input, boundary values, representation,
   formatting, classification, byte order, ownership, VLAN bit fields,
   tagged/untagged serialization, Internet checksums, and IPv4 packet
   round trips
 
-The current test executable runs 158 checks.
+The current test executable runs 200 checks.
 
-The next milestone will build IPv4 forwarding primitives on this packet
-foundation, including controlled TTL updates and longest-prefix route lookup.
+The next milestone will add controlled IPv4 TTL updates that produce a new
+forwarded packet without mutating the input packet.
 
 ## Planned capabilities
 
@@ -295,14 +301,14 @@ into oversized source files.
 ### Linux
 
 - CMake 3.20 or newer
-- A C++20 compiler such as GCC or Clang
+- A C++17 compiler such as GCC or Clang
 - A build tool supported by CMake
 
 ### Windows
 
 - CMake 3.20 or newer
 - Visual Studio 2022 with the Desktop development with C++ workload, or another
-  C++20-capable compiler
+  C++17-capable compiler
 
 Python will become a runtime requirement when the automation milestone begins.
 CUDA will remain optional and will never be required for the core switch, CPU
@@ -476,7 +482,7 @@ fit the design:
 - `std::unique_ptr` for exclusive ownership
 - `std::shared_ptr` and `std::weak_ptr` only where shared lifetime is justified
 - Function and class templates
-- C++20 concepts and constrained generic code
+- C++17 templates with compile-time constraints
 - Lambdas, algorithms, and ranges
 - `std::optional`, structured result types, and explicit error handling
 - `constexpr`, comparison operators, and compile-time validation
@@ -522,7 +528,7 @@ Every discovered defect should result in a retained regression test.
 6. Performance claims require reproducible measurements.
 7. Optimizations must remain protected by correctness tests.
 8. The project documents limitations honestly and does not claim production
-   Cisco hardware experience.
+   network-hardware experience.
 9. OpenGL remains an observer of authoritative state and never becomes a
    dependency of forwarding correctness.
 10. CUDA acceleration remains optional and is always checked against a CPU

@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
-#include <span>
+#include "silicon_switch/network/byte_span.hpp"
 #include <vector>
 
 namespace silicon_switch::network {
@@ -31,7 +31,7 @@ public:
         bool dont_fragment = true);
 
     [[nodiscard]] static std::optional<Ipv4Packet>
-    parse(std::span<const std::uint8_t> bytes);
+    parse(ByteView bytes);
 
     [[nodiscard]] std::vector<std::uint8_t> serialize() const;
 
@@ -63,7 +63,13 @@ public:
         return dont_fragment_;
     }
 
-    bool operator==(const Ipv4Packet&) const = default;
+    [[nodiscard]] bool operator==(const Ipv4Packet& other) const noexcept {
+        return source_ == other.source_ && destination_ == other.destination_ &&
+               protocol_ == other.protocol_ && payload_ == other.payload_ &&
+               time_to_live_ == other.time_to_live_ &&
+               identification_ == other.identification_ &&
+               dont_fragment_ == other.dont_fragment_;
+    }
 
 private:
     struct ValidatedTag {};

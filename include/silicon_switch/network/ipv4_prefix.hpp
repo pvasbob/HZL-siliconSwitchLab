@@ -2,7 +2,6 @@
 
 #include "silicon_switch/network/ipv4_address.hpp"
 
-#include <compare>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -52,7 +51,16 @@ public:
                network_address_.value();
     }
 
-    auto operator<=>(const Ipv4Prefix&) const noexcept = default;
+    [[nodiscard]] constexpr bool operator==(const Ipv4Prefix& other) const noexcept {
+        return network_address_ == other.network_address_ && length_ == other.length_;
+    }
+    [[nodiscard]] constexpr bool operator!=(const Ipv4Prefix& other) const noexcept {
+        return !(*this == other);
+    }
+    [[nodiscard]] constexpr bool operator<(const Ipv4Prefix& other) const noexcept {
+        return network_address_ < other.network_address_ ||
+               (network_address_ == other.network_address_ && length_ < other.length_);
+    }
 
 private:
     struct ValidatedTag {};

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -27,7 +26,12 @@ public:
     }
 
     [[nodiscard]] constexpr bool is_broadcast() const noexcept {
-        return bytes_ == Bytes{0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU};
+        for (const auto byte : bytes_) {
+            if (byte != 0xFFU) {
+                return false;
+            }
+        }
+        return true;
     }
 
     [[nodiscard]] constexpr bool is_multicast() const noexcept {
@@ -38,7 +42,25 @@ public:
         return !is_multicast();
     }
 
-    auto operator<=>(const MacAddress&) const noexcept = default;
+    [[nodiscard]] constexpr bool operator==(const MacAddress& other) const noexcept {
+        for (std::size_t index = 0U; index < byte_count; ++index) {
+            if (bytes_[index] != other.bytes_[index]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    [[nodiscard]] constexpr bool operator!=(const MacAddress& other) const noexcept {
+        return !(*this == other);
+    }
+    [[nodiscard]] constexpr bool operator<(const MacAddress& other) const noexcept {
+        for (std::size_t index = 0U; index < byte_count; ++index) {
+            if (bytes_[index] != other.bytes_[index]) {
+                return bytes_[index] < other.bytes_[index];
+            }
+        }
+        return false;
+    }
 
 private:
     Bytes bytes_;

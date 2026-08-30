@@ -40,7 +40,10 @@ public:
         return !next_hop_.has_value();
     }
 
-    bool operator==(const RouteEntry&) const noexcept = default;
+    [[nodiscard]] constexpr bool operator==(const RouteEntry& other) const noexcept {
+        return prefix_ == other.prefix_ && next_hop_ == other.next_hop_ &&
+               output_port_ == other.output_port_;
+    }
 
 private:
     struct ValidatedTag {};

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -58,7 +57,15 @@ public:
         return value_ == 0xFFFFFFFFU;
     }
 
-    auto operator<=>(const Ipv4Address&) const noexcept = default;
+    [[nodiscard]] constexpr bool operator==(const Ipv4Address& other) const noexcept {
+        return value_ == other.value_;
+    }
+    [[nodiscard]] constexpr bool operator!=(const Ipv4Address& other) const noexcept {
+        return !(*this == other);
+    }
+    [[nodiscard]] constexpr bool operator<(const Ipv4Address& other) const noexcept {
+        return value_ < other.value_;
+    }
 
 private:
     Value value_;

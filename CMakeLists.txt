@@ -7,7 +7,7 @@ project(
     LANGUAGES CXX
 )
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -45,6 +45,7 @@ add_executable(silicon_switch_tests
     tests/network/ipv4_prefix_test.cpp
     tests/network/mac_address_test.cpp
     tests/network/vlan_test.cpp
+    tests/routing/ipv4_forwarding_result_test.cpp
     tests/routing/ipv4_route_table_test.cpp
     tests/test_main.cpp
 )

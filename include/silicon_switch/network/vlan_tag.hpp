@@ -2,7 +2,6 @@
 
 #include "silicon_switch/network/vlan_id.hpp"
 
-#include <compare>
 #include <cstdint>
 #include <optional>
 
@@ -72,7 +71,13 @@ public:
         return drop_eligible_;
     }
 
-    auto operator<=>(const VlanTag&) const noexcept = default;
+    [[nodiscard]] constexpr bool operator==(const VlanTag& other) const noexcept {
+        return vlan_id_ == other.vlan_id_ && priority_ == other.priority_ &&
+               drop_eligible_ == other.drop_eligible_;
+    }
+    [[nodiscard]] constexpr bool operator!=(const VlanTag& other) const noexcept {
+        return !(*this == other);
+    }
 
 private:
     struct ValidatedTag {};

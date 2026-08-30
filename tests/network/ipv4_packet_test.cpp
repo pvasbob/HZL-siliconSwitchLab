@@ -62,7 +62,7 @@ void run_ipv4_packet_tests(TestSuite& suite) {
                        "serialize IPv4 total-length low byte");
     suite.expect_true(
         network::has_valid_internet_checksum(
-            std::span<const std::uint8_t>{bytes}.first(Ipv4Packet::header_size)),
+            network::ByteView{bytes}.first(Ipv4Packet::header_size)),
         "serialize valid IPv4 header checksum");
 
     const auto parsed = Ipv4Packet::parse(bytes);
@@ -116,7 +116,7 @@ void run_ipv4_packet_tests(TestSuite& suite) {
     malformed[10] = 0U;
     malformed[11] = 0U;
     const auto fragment_checksum = network::compute_internet_checksum(
-        std::span<const std::uint8_t>{malformed}.first(
+        network::ByteView{malformed}.first(
             Ipv4Packet::header_size));
     malformed[10] = static_cast<std::uint8_t>(fragment_checksum >> 8U);
     malformed[11] = static_cast<std::uint8_t>(fragment_checksum);

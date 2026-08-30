@@ -7,7 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
-#include <span>
+#include "silicon_switch/network/byte_span.hpp"
 #include <utility>
 #include <vector>
 
@@ -31,7 +31,7 @@ constexpr std::size_t source_offset = 12U;
 constexpr std::size_t destination_offset = 16U;
 
 [[nodiscard]] Ipv4Address read_address(
-    const std::span<const std::uint8_t> bytes,
+    const ByteView bytes,
     const std::size_t offset) {
     const auto value = wire::read_big_endian<std::uint32_t>(bytes, offset);
     return Ipv4Address{*value};
@@ -39,7 +39,7 @@ constexpr std::size_t destination_offset = 16U;
 
 [[nodiscard]] bool write_header_field(
     const std::uint16_t value,
-    const std::span<std::uint8_t> bytes,
+    const MutableByteView bytes,
     const std::size_t offset) {
     return wire::write_big_endian<std::uint16_t>(value, bytes, offset);
 }
@@ -71,7 +71,7 @@ std::optional<Ipv4Packet> Ipv4Packet::create(
 }
 
 std::optional<Ipv4Packet> Ipv4Packet::parse(
-    const std::span<const std::uint8_t> bytes) {
+    const ByteView bytes) {
     if (bytes.size() < header_size ||
         bytes[version_and_header_length_offset] != version_and_header_length ||
         bytes[differentiated_services_offset] !=
@@ -110,7 +110,7 @@ std::optional<Ipv4Packet> Ipv4Packet::parse(
 
 std::vector<std::uint8_t> Ipv4Packet::serialize() const {
     std::vector<std::uint8_t> bytes(header_size + payload_.size());
-    const std::span<std::uint8_t> output{bytes};
+    const MutableByteView output{bytes};
     bytes[version_and_header_length_offset] = version_and_header_length;
     bytes[differentiated_services_offset] = supported_differentiated_services;
     bytes[time_to_live_offset] = time_to_live_;
@@ -133,7 +133,7 @@ std::vector<std::uint8_t> Ipv4Packet::serialize() const {
     }
 
     const std::uint16_t checksum =
-        compute_internet_checksum(std::span<const std::uint8_t>{bytes}.first(
+        compute_internet_checksum(ByteView{bytes}.first(
             header_size));
     if (!write_header_field(checksum, output, checksum_offset)) {
         return {};

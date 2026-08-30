@@ -1,6 +1,5 @@
 #pragma once
 
-#include <compare>
 #include <cstdint>
 #include <optional>
 
@@ -23,7 +22,15 @@ public:
         return value_;
     }
 
-    auto operator<=>(const PortId&) const noexcept = default;
+    [[nodiscard]] constexpr bool operator==(const PortId& other) const noexcept {
+        return value_ == other.value_;
+    }
+    [[nodiscard]] constexpr bool operator!=(const PortId& other) const noexcept {
+        return !(*this == other);
+    }
+    [[nodiscard]] constexpr bool operator<(const PortId& other) const noexcept {
+        return value_ < other.value_;
+    }
 
 private:
     struct ValidatedTag {};

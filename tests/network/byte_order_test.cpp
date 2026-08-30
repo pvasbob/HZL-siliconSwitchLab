@@ -6,7 +6,7 @@
 #include <array>
 #include <cstdint>
 #include <optional>
-#include <span>
+#include "silicon_switch/network/byte_span.hpp"
 
 namespace silicon_switch::test {
 
@@ -74,7 +74,7 @@ void run_byte_order_tests(TestSuite& suite) {
         before_failed_write,
         "failed big-endian write leaves buffer unchanged");
 
-    const std::span<std::uint8_t> empty_output{};
+    const network::MutableByteView empty_output{};
     suite.expect_false(
         write_big_endian<std::uint16_t>(0x0800U, empty_output),
         "reject write to empty buffer");

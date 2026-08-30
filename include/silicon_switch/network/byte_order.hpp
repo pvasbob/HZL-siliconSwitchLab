@@ -1,25 +1,24 @@
 #pragma once
 
-#include <concepts>
+#include "silicon_switch/network/byte_span.hpp"
+
 #include <cstddef>
 #include <cstdint>
 #include <optional>
-#include <span>
 #include <type_traits>
 
 namespace silicon_switch::network::wire {
 
 template <typename Integer>
-concept UnsignedWireInteger =
-    std::unsigned_integral<Integer> &&
-    !std::same_as<std::remove_cv_t<Integer>, bool> &&
-    (sizeof(Integer) == 1U || sizeof(Integer) == 2U ||
-     sizeof(Integer) == 4U || sizeof(Integer) == 8U);
-
-template <UnsignedWireInteger Integer>
 [[nodiscard]] constexpr std::optional<Integer> read_big_endian(
-    const std::span<const std::uint8_t> bytes,
+    const ByteView bytes,
     const std::size_t offset = 0U) noexcept {
+    static_assert(std::is_unsigned<Integer>::value, "wire integer must be unsigned");
+    static_assert(!std::is_same<typename std::remove_cv<Integer>::type, bool>::value,
+                  "bool is not a wire integer");
+    static_assert(sizeof(Integer) == 1U || sizeof(Integer) == 2U ||
+                      sizeof(Integer) == 4U || sizeof(Integer) == 8U,
+                  "unsupported wire integer width");
     if (offset > bytes.size() || sizeof(Integer) > bytes.size() - offset) {
         return std::nullopt;
     }
@@ -33,11 +32,17 @@ template <UnsignedWireInteger Integer>
     return value;
 }
 
-template <UnsignedWireInteger Integer>
+template <typename Integer>
 [[nodiscard]] constexpr bool write_big_endian(
     const Integer value,
-    const std::span<std::uint8_t> bytes,
+    const MutableByteView bytes,
     const std::size_t offset = 0U) noexcept {
+    static_assert(std::is_unsigned<Integer>::value, "wire integer must be unsigned");
+    static_assert(!std::is_same<typename std::remove_cv<Integer>::type, bool>::value,
+                  "bool is not a wire integer");
+    static_assert(sizeof(Integer) == 1U || sizeof(Integer) == 2U ||
+                      sizeof(Integer) == 4U || sizeof(Integer) == 8U,
+                  "unsupported wire integer width");
     if (offset > bytes.size() || sizeof(Integer) > bytes.size() - offset) {
         return false;
     }

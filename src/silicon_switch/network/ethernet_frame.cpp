@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
-#include <span>
+#include "silicon_switch/network/byte_span.hpp"
 #include <utility>
 #include <vector>
 
@@ -24,7 +24,7 @@ constexpr std::size_t inner_ether_type_offset =
     vlan_control_information_offset + sizeof(std::uint16_t);
 
 [[nodiscard]] MacAddress read_mac_address(
-    const std::span<const std::uint8_t> bytes,
+    const ByteView bytes,
     const std::size_t offset) {
     MacAddress::Bytes address_bytes{};
     std::copy_n(
@@ -36,7 +36,7 @@ constexpr std::size_t inner_ether_type_offset =
 
 void write_mac_address(
     const MacAddress& address,
-    const std::span<std::uint8_t> bytes,
+    const MutableByteView bytes,
     const std::size_t offset) {
     std::copy(
         address.bytes().begin(),
@@ -67,7 +67,7 @@ std::optional<EthernetFrame> EthernetFrame::create(
 }
 
 std::optional<EthernetFrame> EthernetFrame::parse(
-    const std::span<const std::uint8_t> bytes) {
+    const ByteView bytes) {
     if (bytes.size() < header_size) {
         return std::nullopt;
     }
@@ -132,7 +132,7 @@ std::vector<std::uint8_t> EthernetFrame::serialize() const {
         vlan_tag_.has_value() ? tagged_header_size : header_size;
     std::vector<std::uint8_t> bytes(
         serialized_header_size + payload_.size());
-    const std::span<std::uint8_t> output{bytes};
+    const MutableByteView output{bytes};
 
     write_mac_address(destination_, output, destination_offset);
     write_mac_address(source_, output, source_offset);

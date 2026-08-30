@@ -7,7 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
-#include <span>
+#include "silicon_switch/network/byte_span.hpp"
 #include <vector>
 
 namespace silicon_switch::network {
@@ -28,7 +28,7 @@ public:
         std::optional<VlanTag> vlan_tag = std::nullopt);
 
     [[nodiscard]] static std::optional<EthernetFrame>
-    parse(std::span<const std::uint8_t> bytes);
+    parse(ByteView bytes);
 
     [[nodiscard]] std::vector<std::uint8_t> serialize() const;
 
@@ -52,7 +52,11 @@ public:
         return payload_;
     }
 
-    bool operator==(const EthernetFrame&) const = default;
+    [[nodiscard]] bool operator==(const EthernetFrame& other) const noexcept {
+        return destination_ == other.destination_ && source_ == other.source_ &&
+               ether_type_ == other.ether_type_ && payload_ == other.payload_ &&
+               vlan_tag_ == other.vlan_tag_;
+    }
 
 private:
     struct ValidatedTag {};
