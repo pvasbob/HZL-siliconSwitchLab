@@ -15,6 +15,9 @@
 #include "routing/l3_ethernet_encapsulation_test.hpp"
 #include "silicon_switch/version.hpp"
 #include "switching/mac_table_test.hpp"
+#include "switching/l2_forwarding_test.hpp"
+#include "switching/l2_l3_pipeline_test.hpp"
+#include "switching/virtual_port_test.hpp"
 #include "switching/vlan_ingress_test.hpp"
 #include "switching/vlan_port_config_test.hpp"
 #include "test_support.hpp"
@@ -42,6 +45,9 @@ int main() {
     silicon_switch::test::run_ipv4_ttl_tests(suite);
     silicon_switch::test::run_l3_ethernet_encapsulation_tests(suite);
     silicon_switch::test::run_mac_table_tests(suite);
+    silicon_switch::test::run_l2_forwarding_tests(suite);
+    silicon_switch::test::run_l2_l3_pipeline_tests(suite);
+    silicon_switch::test::run_virtual_port_tests(suite);
     silicon_switch::test::run_vlan_port_config_tests(suite);
     silicon_switch::test::run_vlan_ingress_tests(suite);
 

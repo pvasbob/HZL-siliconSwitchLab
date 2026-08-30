@@ -286,22 +286,37 @@ The project currently provides:
     configured native VLAN
   - reports tagged-access, missing-native-VLAN, and disallowed-VLAN drops
   - preserves the input Ethernet frame
+- Layer 2 forwarding decisions
+  - forwards known unicast traffic to its learned VLAN-local port
+  - floods unknown unicast, broadcast, and multicast traffic only to eligible
+    VLAN ports and never back to ingress
+  - filters same-port destinations, out-of-VLAN learned ports, and floods with
+    no eligible egress
+- Integrated Layer 2/Layer 3 ingress classification
+  - combines VLAN validation, source learning, router-interface ownership, and
+    Layer 2 destination lookup
+  - selects known-unicast switching, flooding, IPv4 routing, local ARP control,
+    or an explicit drop reason
+  - protects static MAC bindings from source movement
+- A validated `VirtualPort` model
+  - represents identity, MAC address, administrative and link state, speed,
+    MTU, and VLAN configuration
+  - records receive/transmit packets, bytes, errors, and drops
+  - rejects invalid MAC addresses and MTU values
 - Tests for valid input, malformed input, boundary values, representation,
   formatting, classification, byte order, ownership, VLAN bit fields,
   tagged/untagged serialization, Internet checksums, and IPv4 packet
   round trips
 
-The current test executable runs 407 checks.
+The current test executable runs 462 checks.
 
-The next milestone will add Layer 2 forwarding decisions for known unicast,
-unknown unicast, broadcast flooding, and ingress-port filtering.
+The next milestone will add bounded packet queues with explicit congestion-drop
+behavior and close/shutdown semantics.
 
 ## Planned capabilities
 
 Later milestones will add:
 
-- Virtual ports and IEEE 802.1Q VLAN membership
-- Known-unicast forwarding and unknown-unicast/broadcast flooding
 - ARP/neighbor state and IPv4 routing
 - Route, next-hop, and ECMP objects
 - ACL-style match/action rules
