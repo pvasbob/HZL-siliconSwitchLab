@@ -19,6 +19,7 @@ add_library(silicon_switch
     src/silicon_switch/network/ipv4_packet.cpp
     src/silicon_switch/network/ipv4_prefix.cpp
     src/silicon_switch/network/mac_address.cpp
+    src/silicon_switch/routing/arp_cache.cpp
     src/silicon_switch/routing/ipv4_forwarding_engine.cpp
     src/silicon_switch/routing/ipv4_route_table.cpp
     src/silicon_switch/routing/ipv4_ttl.cpp
@@ -49,6 +50,7 @@ add_executable(silicon_switch_tests
     tests/network/ipv4_prefix_test.cpp
     tests/network/mac_address_test.cpp
     tests/network/vlan_test.cpp
+    tests/routing/arp_cache_test.cpp
     tests/routing/ipv4_forwarding_engine_test.cpp
     tests/routing/ipv4_forwarding_result_test.cpp
     tests/routing/ipv4_route_table_test.cpp

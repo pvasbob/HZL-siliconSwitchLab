@@ -197,6 +197,15 @@ The project currently provides:
   - support for ARP probes with an unspecified sender IPv4 address
   - rejection of unsupported hardware/protocol types, invalid address lengths,
     invalid operations, malformed MAC roles, truncation, and trailing bytes
+- A validated IPv4-to-MAC `ArpCache`
+  - explicit inserted, replaced, and rejected update outcomes
+  - neighbor lookup and removal
+  - deterministic size and empty-state queries
+  - rejection of unspecified, multicast, and broadcast addresses
+  - configurable entry lifetime based on `std::chrono::steady_clock`
+  - timestamp refresh when mappings are replaced
+  - time-aware lookup and explicit aging passes
+  - deterministic expiration-boundary tests without sleeps or wall-clock time
 - An owning, validated `EthernetFrame` value type
   - destination and source MAC addresses
   - EtherType and variable-size payload
@@ -256,10 +265,10 @@ The project currently provides:
   tagged/untagged serialization, Internet checksums, and IPv4 packet
   round trips
 
-The current test executable runs 266 checks.
+The current test executable runs 307 checks.
 
-The next milestone will add an ARP cache that maps IPv4 next-hop addresses to
-MAC addresses with insertion, replacement, and lookup.
+The next milestone will add Layer 3 Ethernet encapsulation using the router's
+source MAC address and the ARP-resolved next-hop destination MAC address.
 
 ## Planned capabilities
 
