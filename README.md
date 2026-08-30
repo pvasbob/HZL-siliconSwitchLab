@@ -318,15 +318,30 @@ The project currently provides:
     and resource exhaustion
   - reports latency without sleeping and supports reproducible sequence reset
   - validates configuration and preserves unaffected packets and ports
+- A runtime-polymorphic ASIC hierarchy
+  - defines a vendor-neutral `SwitchAsic` contract with a virtual destructor
+  - provides `SoftwareAsic` and lightweight `MockSwitchAsic` implementations
+  - uses `std::unique_ptr` ownership at the hardware boundary
+- A SAI-inspired `ProgrammableSwitch` API
+  - configures ports, operational state, VLANs, VLAN membership, router
+    interfaces, routes, neighbors, faults, and counters
+  - queries programmed ports, VLANs, exact routes, neighbors, and statistics
+  - preserves explicit success, validation, dependency, lookup, duplicate, and
+    resource-exhaustion results from the backend
+- A complete `SoftwareAsic` forwarding path
+  - connects fault injection, Ethernet parsing, port/MTU checks, VLAN ingress,
+    MAC learning, L2 switching/flooding, local ARP, IPv4 routing, ARP resolution,
+    Ethernet rewrite, egress queues, virtual-port counters, and global counters
+  - exposes queued output packets for deterministic end-to-end testing
 - Tests for valid input, malformed input, boundary values, representation,
   formatting, classification, byte order, ownership, VLAN bit fields,
   tagged/untagged serialization, Internet checksums, and IPv4 packet
   round trips
 
-The current test executable runs 512 checks.
+The current test executable runs 557 checks.
 
-The next milestone will introduce the ASIC interface hierarchy, separating a
-runtime-polymorphic switch contract from software and mock implementations.
+The next milestone will begin cross-platform communication with an RAII socket
+layer for Linux file descriptors and Windows Winsock handles.
 
 ## Planned capabilities
 
@@ -336,8 +351,6 @@ Later milestones will add:
 - Route, next-hop, and ECMP objects
 - ACL-style match/action rules
 - Thread-safe worker pipelines and graceful shutdown
-- A SAI-inspired hardware interface
-- A `SoftwareAsic` implementation with integrated fault injection
 - Desired-state and observed-state reconciliation
 - Python topology, configuration, traffic, and report tools
 - A distributed UDP virtual-port transport
