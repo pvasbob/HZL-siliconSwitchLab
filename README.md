@@ -190,6 +190,13 @@ The project currently provides:
 - A strongly typed `EtherType` representation
   - named IPv4, ARP, 802.1Q VLAN, and IPv6 values
   - preservation of unknown protocol identifiers
+- An owning, validated Ethernet/IPv4 `ArpPacket` value type
+  - separate request and reply construction
+  - sender and target MAC and IPv4 address fields
+  - exact 28-byte parsing and network-byte-order serialization
+  - support for ARP probes with an unspecified sender IPv4 address
+  - rejection of unsupported hardware/protocol types, invalid address lengths,
+    invalid operations, malformed MAC roles, truncation, and trailing bytes
 - An owning, validated `EthernetFrame` value type
   - destination and source MAC addresses
   - EtherType and variable-size payload
@@ -220,6 +227,11 @@ The project currently provides:
   - automatic total-length and header-checksum generation
   - checksum, length, version, TTL, and fragmentation validation
   - explicit rejection of unsupported IPv4 options and fragmented packets
+- Strongly typed IPv4 routes and longest-prefix matching
+  - validated output-port and next-hop values
+  - exact lookup, insertion, replacement, and removal
+  - default, network, subnet, and host routes
+  - direct routes and gateway routes
 - Explicit IPv4 forwarding result types
   - `ForwardedIpv4Packet` owns the resulting packet and identifies its output
     port and resolved next-hop address
@@ -233,23 +245,26 @@ The project currently provides:
   - source, destination, protocol, payload, identification, and fragmentation
     policy are preserved while the input packet remains unchanged
   - serialization regenerates and validates the IPv4 header checksum
+- An owning `Ipv4ForwardingEngine`
+  - applies TTL expiration and immutable TTL decrement
+  - performs longest-prefix route selection
+  - selects the configured gateway for indirect routes and the packet
+    destination for directly connected routes
+  - returns explicit forwarded or TTL-expired/route-miss outcomes
 - Tests for valid input, malformed input, boundary values, representation,
   formatting, classification, byte order, ownership, VLAN bit fields,
   tagged/untagged serialization, Internet checksums, and IPv4 packet
   round trips
 
-The current test executable runs 217 checks.
+The current test executable runs 266 checks.
 
-The next milestone will add the IPv4 forwarding engine, combining TTL handling,
-longest-prefix lookup, output-port selection, and direct or gateway next-hop
-selection.
+The next milestone will add an ARP cache that maps IPv4 next-hop addresses to
+MAC addresses with insertion, replacement, and lookup.
 
 ## Planned capabilities
 
 Later milestones will add:
 
-- Longest-prefix route matching
-- Safe ARP and IPv4 parsing and serialization
 - Virtual ports and IEEE 802.1Q VLAN membership
 - Capacity-bounded MAC learning and aging
 - Known-unicast forwarding and unknown-unicast/broadcast flooding
