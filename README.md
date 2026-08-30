@@ -226,15 +226,23 @@ The project currently provides:
   - `DroppedIpv4Packet` reports a typed TTL-expired or route-miss reason
   - `Ipv4ForwardingResult` uses `std::variant` so callers must handle either
     forwarding or dropping without null pointers or ambiguous sentinel values
+- Controlled IPv4 TTL updates
+  - packets with TTL greater than one produce a new packet with TTL reduced by
+    exactly one
+  - packets with TTL equal to one produce a typed TTL-expired drop
+  - source, destination, protocol, payload, identification, and fragmentation
+    policy are preserved while the input packet remains unchanged
+  - serialization regenerates and validates the IPv4 header checksum
 - Tests for valid input, malformed input, boundary values, representation,
   formatting, classification, byte order, ownership, VLAN bit fields,
   tagged/untagged serialization, Internet checksums, and IPv4 packet
   round trips
 
-The current test executable runs 200 checks.
+The current test executable runs 217 checks.
 
-The next milestone will add controlled IPv4 TTL updates that produce a new
-forwarded packet without mutating the input packet.
+The next milestone will add the IPv4 forwarding engine, combining TTL handling,
+longest-prefix lookup, output-port selection, and direct or gateway next-hop
+selection.
 
 ## Planned capabilities
 

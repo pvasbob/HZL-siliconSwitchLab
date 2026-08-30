@@ -8,6 +8,7 @@
 #include "network/vlan_test.hpp"
 #include "routing/ipv4_forwarding_result_test.hpp"
 #include "routing/ipv4_route_table_test.hpp"
+#include "routing/ipv4_ttl_test.hpp"
 #include "silicon_switch/version.hpp"
 #include "test_support.hpp"
 
@@ -28,6 +29,7 @@ int main() {
     silicon_switch::test::run_vlan_tests(suite);
     silicon_switch::test::run_ipv4_forwarding_result_tests(suite);
     silicon_switch::test::run_ipv4_route_table_tests(suite);
+    silicon_switch::test::run_ipv4_ttl_tests(suite);
 
     return suite.exit_code();
 }
