@@ -43,6 +43,10 @@ add_library(silicon_switch
     src/silicon_switch/transport/state_update_protocol.cpp
     src/silicon_switch/transport/tcp.cpp
     src/silicon_switch/transport/udp.cpp
+    src/silicon_switch/visualization/application.cpp
+    src/silicon_switch/visualization/observer_client.cpp
+    src/silicon_switch/visualization/topology.cpp
+    src/silicon_switch/visualization/topology_renderer.cpp
     src/silicon_switch/version.cpp
 )
 
@@ -54,6 +58,20 @@ target_include_directories(silicon_switch
 add_executable(silicon_switch_cli
     apps/switch_cli/main.cpp
 )
+
+find_package(OpenGL QUIET)
+find_package(glfw3 CONFIG QUIET)
+if(OpenGL_FOUND AND TARGET glfw)
+    add_executable(silicon_switch_observer
+        apps/observer/main.cpp
+    )
+    target_link_libraries(silicon_switch_observer
+        PRIVATE
+            silicon_switch
+            OpenGL::GL
+            glfw
+    )
+endif()
 
 target_link_libraries(silicon_switch_cli
     PRIVATE
@@ -88,6 +106,7 @@ add_executable(silicon_switch_tests
     tests/switching/vlan_ingress_test.cpp
     tests/switching/vlan_port_config_test.cpp
     tests/transport/transport_test.cpp
+    tests/visualization/visualization_test.cpp
     tests/test_main.cpp
 )
 
@@ -125,6 +144,9 @@ endfunction()
 enable_strict_warnings(silicon_switch)
 enable_strict_warnings(silicon_switch_cli)
 enable_strict_warnings(silicon_switch_tests)
+if(TARGET silicon_switch_observer)
+    enable_strict_warnings(silicon_switch_observer)
+endif()
 
 include(CTest)
 

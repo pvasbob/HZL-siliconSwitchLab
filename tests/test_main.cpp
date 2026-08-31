@@ -27,6 +27,7 @@
 #include "switching/vlan_port_config_test.hpp"
 #include "test_support.hpp"
 #include "transport/transport_test.hpp"
+#include "visualization/visualization_test.hpp"
 
 #include <string_view>
 
@@ -62,6 +63,7 @@ int main() {
     silicon_switch::test::run_vlan_port_config_tests(suite);
     silicon_switch::test::run_vlan_ingress_tests(suite);
     silicon_switch::test::run_transport_tests(suite);
+    silicon_switch::test::run_visualization_tests(suite);
 
     return suite.exit_code();
 }

@@ -353,15 +353,26 @@ The project currently provides:
   - encode and exchange framed control requests with matching response IDs
   - load JSON process configurations, launch and stop services, report status,
     and collect combined output logs
+- A cross-platform visualization application foundation
+  - separates the rendering loop from platform windows for headless testing
+  - builds an optional GLFW/OpenGL observer executable when dependencies exist
+  - supports keyboard input, frame presentation, and clean RAII shutdown
+- A serializable network-topology scene and renderer
+  - models labeled nodes, links, VLANs, operational state, and traffic counters
+  - renders VLAN/activity colors, failed links, and topology connectivity
+- A read-only observer client
+  - applies authoritative topology snapshots and deltas received through the
+    versioned UDP state protocol
+  - rejects malformed scenes and requests resynchronization after packet loss
 - Tests for valid input, malformed input, boundary values, representation,
   formatting, classification, byte order, ownership, VLAN bit fields,
   tagged/untagged serialization, Internet checksums, and IPv4 packet
   round trips
 
-The C++ test executable runs 604 checks, and five Python tests cover protocol
+The C++ test executable runs 623 checks, and five Python tests cover protocol
 compatibility, configuration loading, process lifecycle, and log collection.
 
-The next milestone will create the cross-platform OpenGL application foundation.
+The next milestone will add the authoritative simulation server.
 
 ## Planned capabilities
 
@@ -379,7 +390,6 @@ Later milestones will add:
 - CPU/GPU correctness comparison and performance measurement
 - Versioned full-scene snapshots and incremental scene updates
 - Scene revision, sequence, timestamp, and resynchronization handling
-- Linux and Windows OpenGL observer applications
 - Independent and leader-following camera modes
 - Capability negotiation and level-of-detail selection for observer computers
 - Bandwidth-aware sampling, quantization, or compression experiments
@@ -393,15 +403,20 @@ test strategy, and interview-question mapping.
 ```text
 siliconSwitchLab/
 ├── apps/
+│   ├── observer/                Optional GLFW/OpenGL observer
 │   └── switch_cli/              CLI executable entry point
 ├── include/
 │   └── silicon_switch/          Public library interfaces
-│       └── network/             Networking value types
+│       ├── network/             Networking value types
+│       └── visualization/       Topology and observer interfaces
+├── python/                      Control and process orchestration package
 ├── src/
 │   └── silicon_switch/          Library implementations
-│       └── network/
+│       ├── network/
+│       └── visualization/
 ├── tests/
-│   └── network/                 Component unit tests
+│   ├── network/                 Component unit tests
+│   └── visualization/           Headless rendering and observer tests
 ├── docs/                        Learning, architecture, and design notes
 ├── CMakeLists.txt
 ├── PROJECT_PLAN.txt
@@ -426,11 +441,10 @@ into oversized source files.
 - Visual Studio 2022 with the Desktop development with C++ workload, or another
   C++17-capable compiler
 
-Python will become a runtime requirement when the automation milestone begins.
-CUDA will remain optional and will never be required for the core switch, CPU
-reference simulation, or observer applications. Later visualization milestones
-will introduce an OpenGL-capable windowing library and OpenGL function loader as
-explicit, documented dependencies.
+Python 3 is required for the orchestration tools. CUDA remains optional and is
+never required for the core switch, CPU reference simulation, or observers.
+GLFW 3 and OpenGL are also optional; when found, CMake builds the
+`silicon_switch_observer` application.
 
 ## Build and test on Linux
 
