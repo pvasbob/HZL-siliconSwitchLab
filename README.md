@@ -364,15 +364,29 @@ The project currently provides:
   - applies authoritative topology snapshots and deltas received through the
     versioned UDP state protocol
   - rejects malformed scenes and requests resynchronization after packet loss
+- An authoritative simulation server
+  - advances a deterministic topology scene at a configurable update rate
+  - publishes periodic full snapshots and intermediate deltas to any number of
+    UDP observer endpoints
+  - supports bounded smoke runs and graceful interrupt-driven shutdown
+- Interchangeable CPU and CUDA simulation backends
+  - keeps the CPU implementation deterministic and available on every platform
+  - optionally compiles an RTX 3080-compatible CUDA kernel for parallel position
+    and traffic-counter updates
+  - isolates CUDA allocation, execution, transfer, and cleanup behind RAII
+- Runtime backend selection
+  - accepts automatic, CPU, CUDA, and observer-only modes
+  - automatically prefers an operational CUDA device and otherwise uses CPU
+  - reports explicit errors when a requested CUDA build or device is unavailable
 - Tests for valid input, malformed input, boundary values, representation,
   formatting, classification, byte order, ownership, VLAN bit fields,
   tagged/untagged serialization, Internet checksums, and IPv4 packet
   round trips
 
-The C++ test executable runs 623 checks, and five Python tests cover protocol
+The C++ test executable runs 647 checks, and five Python tests cover protocol
 compatibility, configuration loading, process lifecycle, and log collection.
 
-The next milestone will add the authoritative simulation server.
+The next milestone will add four-computer discovery and configuration.
 
 ## Planned capabilities
 
@@ -384,9 +398,6 @@ Later milestones will add:
 - Thread-safe worker pipelines and graceful shutdown
 - Desired-state and observed-state reconciliation
 - Unit, integration, concurrency, fault-injection, and benchmark suites
-- A deterministic headless simulation core
-- A CPU reference simulation backend
-- An optional CUDA simulation backend on the Linux GPU desktop
 - CPU/GPU correctness comparison and performance measurement
 - Versioned full-scene snapshots and incremental scene updates
 - Scene revision, sequence, timestamp, and resynchronization handling
@@ -404,18 +415,22 @@ test strategy, and interview-question mapping.
 siliconSwitchLab/
 ├── apps/
 │   ├── observer/                Optional GLFW/OpenGL observer
+│   ├── simulation_server/       Authoritative scene publisher
 │   └── switch_cli/              CLI executable entry point
 ├── include/
 │   └── silicon_switch/          Public library interfaces
 │       ├── network/             Networking value types
+│       ├── simulation/          CPU/CUDA backends and server
 │       └── visualization/       Topology and observer interfaces
 ├── python/                      Control and process orchestration package
 ├── src/
 │   └── silicon_switch/          Library implementations
 │       ├── network/
+│       ├── simulation/
 │       └── visualization/
 ├── tests/
 │   ├── network/                 Component unit tests
+│   ├── simulation/              Backend and publisher tests
 │   └── visualization/           Headless rendering and observer tests
 ├── docs/                        Learning, architecture, and design notes
 ├── CMakeLists.txt
@@ -465,6 +480,19 @@ Expected output:
 
 ```text
 Silicon Switch Lab 0.1.0
+```
+
+Run a finite CPU simulation and publish to an observer:
+
+```bash
+./build/silicon_switch_server --backend cpu --observer 192.168.1.20:9000 --ticks 300
+```
+
+CUDA is detected automatically. To guarantee a portable CPU-only build:
+
+```bash
+cmake -S . -B build-cpu -DSILICON_SWITCH_ENABLE_CUDA=OFF
+cmake --build build-cpu
 ```
 
 Run the tests directly:

@@ -9,6 +9,22 @@ project(
 
 find_package(Threads REQUIRED)
 
+option(SILICON_SWITCH_ENABLE_CUDA "Build the optional CUDA simulation backend" ON)
+set(SILICON_SWITCH_CUDA_SOURCE
+    src/silicon_switch/simulation/cuda_backend_stub.cpp
+)
+if(SILICON_SWITCH_ENABLE_CUDA)
+    include(CheckLanguage)
+    check_language(CUDA)
+    if(CMAKE_CUDA_COMPILER)
+        enable_language(CUDA)
+        find_package(CUDAToolkit REQUIRED)
+        set(SILICON_SWITCH_CUDA_SOURCE
+            src/silicon_switch/simulation/cuda_backend.cu
+        )
+    endif()
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -31,6 +47,10 @@ add_library(silicon_switch
     src/silicon_switch/routing/ipv4_route_table.cpp
     src/silicon_switch/routing/ipv4_ttl.cpp
     src/silicon_switch/routing/l3_ethernet_encapsulation.cpp
+    src/silicon_switch/simulation/authoritative_server.cpp
+    src/silicon_switch/simulation/cpu_backend.cpp
+    src/silicon_switch/simulation/runtime_selection.cpp
+    ${SILICON_SWITCH_CUDA_SOURCE}
     src/silicon_switch/switching/mac_table.cpp
     src/silicon_switch/switching/l2_forwarding.cpp
     src/silicon_switch/switching/l2_l3_pipeline.cpp
@@ -55,8 +75,26 @@ target_include_directories(silicon_switch
         "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 
+if(CMAKE_CUDA_COMPILER AND SILICON_SWITCH_ENABLE_CUDA)
+    set_target_properties(silicon_switch PROPERTIES
+        CUDA_ARCHITECTURES 86
+        CUDA_STANDARD 17
+        CUDA_STANDARD_REQUIRED ON
+    )
+    target_link_libraries(silicon_switch PUBLIC CUDA::cudart)
+endif()
+
 add_executable(silicon_switch_cli
     apps/switch_cli/main.cpp
+)
+
+add_executable(silicon_switch_server
+    apps/simulation_server/main.cpp
+)
+target_link_libraries(silicon_switch_server
+    PRIVATE
+        silicon_switch
+        Threads::Threads
 )
 
 find_package(OpenGL QUIET)
@@ -99,6 +137,7 @@ add_executable(silicon_switch_tests
     tests/routing/ipv4_route_table_test.cpp
     tests/routing/ipv4_ttl_test.cpp
     tests/routing/l3_ethernet_encapsulation_test.cpp
+    tests/simulation/simulation_test.cpp
     tests/switching/mac_table_test.cpp
     tests/switching/l2_forwarding_test.cpp
     tests/switching/l2_l3_pipeline_test.cpp
@@ -129,20 +168,15 @@ function(enable_strict_warnings target_name)
     if(MSVC)
         target_compile_options(${target_name} PRIVATE /W4 /permissive-)
     else()
-        target_compile_options(
-            ${target_name}
-            PRIVATE
-                -Wall
-                -Wextra
-                -Wpedantic
-                -Wconversion
-                -Wsign-conversion
+        target_compile_options(${target_name} PRIVATE
+            $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wpedantic;-Wconversion;-Wsign-conversion>
         )
     endif()
 endfunction()
 
 enable_strict_warnings(silicon_switch)
 enable_strict_warnings(silicon_switch_cli)
+enable_strict_warnings(silicon_switch_server)
 enable_strict_warnings(silicon_switch_tests)
 if(TARGET silicon_switch_observer)
     enable_strict_warnings(silicon_switch_observer)
