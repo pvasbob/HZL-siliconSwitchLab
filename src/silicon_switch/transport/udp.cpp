@@ -28,6 +28,7 @@ std::variant<sockaddr_in, UdpError> endpoint(const std::string& address,
 
 UdpSocket::BindResult UdpSocket::bind_ipv4(const std::string& address,
                                            const std::uint16_t port) {
+    ensure_socket_runtime();
     const auto target = endpoint(address, port);
     if (std::holds_alternative<UdpError>(target)) {
         return std::get<UdpError>(target);

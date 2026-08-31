@@ -39,6 +39,10 @@ private:
     bool initialized_{false};
 };
 
+// Ensures Winsock remains initialized for the process lifetime. On POSIX this
+// is a harmless no-op runtime object.
+void ensure_socket_runtime();
+
 class SocketHandle {
 public:
     SocketHandle() noexcept = default;

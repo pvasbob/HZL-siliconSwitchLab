@@ -39,6 +39,7 @@ int send_flags(){
 } 
 
 TcpConnection::ConnectResult TcpConnection::connect_ipv4(const std::string& address,const std::uint16_t port){
+    ensure_socket_runtime();
     SocketHandle socket{::socket(AF_INET,SOCK_STREAM,IPPROTO_TCP)};
     if(!socket.valid()) return system_error();
     sockaddr_in endpoint{};endpoint.sin_family=AF_INET;endpoint.sin_port=htons(port);
@@ -103,6 +104,7 @@ TcpConnection::ReceiveResult TcpConnection::receive_frame(const std::size_t maxi
 }
 
 TcpServer::ListenResult TcpServer::listen_ipv4(const std::string& address,const std::uint16_t port,const int backlog){
+    ensure_socket_runtime();
     SocketHandle socket{::socket(AF_INET,SOCK_STREAM,IPPROTO_TCP)};
     if(!socket.valid())return system_error();
     int reuse=1;

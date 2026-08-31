@@ -42,6 +42,11 @@ SocketRuntime::~SocketRuntime() {
 #endif
 }
 
+void ensure_socket_runtime() {
+    static const SocketRuntime runtime;
+    static_cast<void>(runtime);
+}
+
 SocketHandle::~SocketHandle(){reset();}
 SocketHandle::SocketHandle(SocketHandle&& other) noexcept:handle_{other.release()}{}
 SocketHandle& SocketHandle::operator=(SocketHandle&& other) noexcept {
