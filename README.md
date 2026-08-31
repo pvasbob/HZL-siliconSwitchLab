@@ -378,15 +378,22 @@ The project currently provides:
   - accepts automatic, CPU, CUDA, and observer-only modes
   - automatically prefers an operational CUDA device and otherwise uses CPU
   - reports explicit errors when a requested CUDA build or device is unavailable
+- Cross-platform LAN discovery and four-machine configuration
+  - exchanges versioned UDP queries and advertisements without raw sockets
+  - reports stable node IDs, leader/observer roles, CUDA/OpenGL/control
+    capabilities, service ports, names, and packet-source addresses
+  - validates one authoritative leader and three uniquely identified observers
+  - provides a CLI for broadcast discovery, one-shot advertisement responses,
+    receive timeouts, and machine-readable JSON output
 - Tests for valid input, malformed input, boundary values, representation,
   formatting, classification, byte order, ownership, VLAN bit fields,
   tagged/untagged serialization, Internet checksums, and IPv4 packet
   round trips
 
-The C++ test executable runs 647 checks, and five Python tests cover protocol
+The C++ test executable runs 670 checks, and five Python tests cover protocol
 compatibility, configuration loading, process lifecycle, and log collection.
 
-The next milestone will add four-computer discovery and configuration.
+The next milestone will add full multi-computer integration scenarios.
 
 ## Planned capabilities
 
@@ -414,11 +421,13 @@ test strategy, and interview-question mapping.
 ```text
 siliconSwitchLab/
 ├── apps/
+│   ├── discovery/               LAN discovery and configuration CLI
 │   ├── observer/                Optional GLFW/OpenGL observer
 │   ├── simulation_server/       Authoritative scene publisher
 │   └── switch_cli/              CLI executable entry point
 ├── include/
 │   └── silicon_switch/          Public library interfaces
+│       ├── discovery/           Machine discovery and lab configuration
 │       ├── network/             Networking value types
 │       ├── simulation/          CPU/CUDA backends and server
 │       └── visualization/       Topology and observer interfaces
@@ -429,6 +438,7 @@ siliconSwitchLab/
 │       ├── simulation/
 │       └── visualization/
 ├── tests/
+│   ├── discovery/               Protocol and loopback integration tests
 │   ├── network/                 Component unit tests
 │   ├── simulation/              Backend and publisher tests
 │   └── visualization/           Headless rendering and observer tests
@@ -494,6 +504,21 @@ CUDA is detected automatically. To guarantee a portable CPU-only build:
 cmake -S . -B build-cpu -DSILICON_SWITCH_ENABLE_CUDA=OFF
 cmake --build build-cpu
 ```
+
+On each machine, answer one discovery query with its role and service ports:
+
+```bash
+./build/silicon_switch_discovery advertise 0.0.0.0 39090 1001 leader gpu-desktop 7000 8000 cuda,opengl
+```
+
+From another machine, query the LAN broadcast address and emit JSON:
+
+```bash
+./build/silicon_switch_discovery discover 192.168.1.255 39090 1500
+```
+
+Use the broadcast address appropriate for the local subnet and allow inbound and
+outbound UDP on the chosen discovery port in each machine's firewall.
 
 Run the tests directly:
 

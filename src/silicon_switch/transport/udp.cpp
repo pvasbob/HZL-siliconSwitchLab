@@ -1,6 +1,7 @@
 #include "silicon_switch/transport/udp.hpp"
 
 #include <array>
+#include <chrono>
 #include <limits>
 #include <utility>
 
@@ -108,6 +109,34 @@ std::uint16_t UdpSocket::local_port() const {
         return 0U;
     }
     return ntohs(address.sin_port);
+}
+
+std::optional<UdpError> UdpSocket::enable_broadcast() {
+    const int enabled = 1;
+    if (setsockopt(socket_.native_handle(), SOL_SOCKET, SO_BROADCAST,
+                   reinterpret_cast<const char*>(&enabled),
+                   static_cast<int>(sizeof(enabled))) != 0) {
+        return UdpError{last_socket_error()};
+    }
+    return std::nullopt;
+}
+
+std::optional<UdpError> UdpSocket::set_receive_timeout(
+    const std::chrono::milliseconds timeout) {
+#ifdef _WIN32
+    const auto value = static_cast<DWORD>(timeout.count());
+#else
+    const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(timeout);
+    const auto remainder = timeout - seconds;
+    const timeval value{static_cast<time_t>(seconds.count()),
+                        static_cast<suseconds_t>(remainder.count() * 1000)};
+#endif
+    if (setsockopt(socket_.native_handle(), SOL_SOCKET, SO_RCVTIMEO,
+                   reinterpret_cast<const char*>(&value),
+                   static_cast<int>(sizeof(value))) != 0) {
+        return UdpError{last_socket_error()};
+    }
+    return std::nullopt;
 }
 
 }  // namespace silicon_switch::transport

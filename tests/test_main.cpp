@@ -3,6 +3,7 @@
 #include "asic/programmable_switch_test.hpp"
 #include "asic/software_asic_test.hpp"
 #include "asic/traffic_statistics_test.hpp"
+#include "discovery/discovery_test.hpp"
 #include "network/arp_packet_test.hpp"
 #include "network/byte_order_test.hpp"
 #include "network/ethernet_frame_test.hpp"
@@ -42,6 +43,7 @@ int main() {
     silicon_switch::test::run_programmable_switch_tests(suite);
     silicon_switch::test::run_software_asic_tests(suite);
     silicon_switch::test::run_traffic_statistics_tests(suite);
+    silicon_switch::test::run_discovery_tests(suite);
     silicon_switch::test::run_arp_packet_tests(suite);
     silicon_switch::test::run_byte_order_tests(suite);
     silicon_switch::test::run_ethernet_frame_tests(suite);

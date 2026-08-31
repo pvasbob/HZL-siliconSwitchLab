@@ -4,7 +4,9 @@
 #include "silicon_switch/transport/socket_handle.hpp"
 
 #include <cstddef>
+#include <chrono>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <utility>
 #include <variant>
@@ -38,6 +40,9 @@ public:
     [[nodiscard]] std::variant<std::size_t, UdpError> send_to_ipv4(
         const std::string& address, std::uint16_t port, network::ByteView payload);
     [[nodiscard]] ReceiveResult receive(std::size_t maximum_size);
+    [[nodiscard]] std::optional<UdpError> enable_broadcast();
+    [[nodiscard]] std::optional<UdpError> set_receive_timeout(
+        std::chrono::milliseconds timeout);
     [[nodiscard]] std::uint16_t local_port() const;
 
 private:

@@ -35,6 +35,9 @@ add_library(silicon_switch
     src/silicon_switch/asic/programmable_switch.cpp
     src/silicon_switch/asic/software_asic.cpp
     src/silicon_switch/asic/traffic_statistics.cpp
+    src/silicon_switch/discovery/discovery_protocol.cpp
+    src/silicon_switch/discovery/discovery_service.cpp
+    src/silicon_switch/discovery/lab_configuration.cpp
     src/silicon_switch/network/arp_packet.cpp
     src/silicon_switch/network/ethernet_frame.cpp
     src/silicon_switch/network/internet_checksum.cpp
@@ -88,6 +91,11 @@ add_executable(silicon_switch_cli
     apps/switch_cli/main.cpp
 )
 
+add_executable(silicon_switch_discovery
+    apps/discovery/main.cpp
+)
+target_link_libraries(silicon_switch_discovery PRIVATE silicon_switch)
+
 add_executable(silicon_switch_server
     apps/simulation_server/main.cpp
 )
@@ -122,6 +130,7 @@ add_executable(silicon_switch_tests
     tests/asic/programmable_switch_test.cpp
     tests/asic/software_asic_test.cpp
     tests/asic/traffic_statistics_test.cpp
+    tests/discovery/discovery_test.cpp
     tests/network/arp_packet_test.cpp
     tests/network/byte_order_test.cpp
     tests/network/ethernet_frame_test.cpp
@@ -176,6 +185,7 @@ endfunction()
 
 enable_strict_warnings(silicon_switch)
 enable_strict_warnings(silicon_switch_cli)
+enable_strict_warnings(silicon_switch_discovery)
 enable_strict_warnings(silicon_switch_server)
 enable_strict_warnings(silicon_switch_tests)
 if(TARGET silicon_switch_observer)
