@@ -139,10 +139,9 @@ The simulation core, switch core, networking protocol, and renderer remain
 separate components. Correctness tests can run headlessly without CUDA, OpenGL,
 or a physical multi-computer lab.
 
-The first networking versions run deterministically within one process. A later
-milestone will add a versioned UDP transport so the simulated switch, control
-client, simulation server, and observers can run across the available Linux and
-Windows computers without requiring raw-socket privileges.
+The networking layer provides versioned TCP control messages and UDP scene-state
+updates so the simulated switch, control client, simulation server, and observers
+can run across Linux and Windows computers without raw-socket privileges.
 
 Python will integrate with the C++ system through two explicit boundaries:
 
@@ -342,15 +341,27 @@ The project currently provides:
 - A versioned control protocol
   - carries typed commands, request identifiers, and binary payloads
   - rejects invalid magic, versions, commands, lengths, and truncated messages
+- A cross-platform UDP state-update transport
+  - carries versioned snapshots, deltas, heartbeats, and resync requests
+  - preserves session IDs, sequence numbers, timestamps, revisions, and payloads
+  - provides IPv4 bind, send, receive, endpoint, and ephemeral-port operations
+- A client synchronization state machine
+  - detects duplicates, stale packets, sequence gaps, revision mismatches, server
+    restarts, and receive timeouts
+  - applies valid snapshots and deltas and explicitly requests resynchronization
+- Dependency-free Python orchestration tools
+  - encode and exchange framed control requests with matching response IDs
+  - load JSON process configurations, launch and stop services, report status,
+    and collect combined output logs
 - Tests for valid input, malformed input, boundary values, representation,
   formatting, classification, byte order, ownership, VLAN bit fields,
   tagged/untagged serialization, Internet checksums, and IPv4 packet
   round trips
 
-The current test executable runs 576 checks.
+The C++ test executable runs 604 checks, and five Python tests cover protocol
+compatibility, configuration loading, process lifecycle, and log collection.
 
-The next milestone will add a versioned UDP transport for distributed virtual
-ports and scene-state updates.
+The next milestone will create the cross-platform OpenGL application foundation.
 
 ## Planned capabilities
 
@@ -361,8 +372,6 @@ Later milestones will add:
 - ACL-style match/action rules
 - Thread-safe worker pipelines and graceful shutdown
 - Desired-state and observed-state reconciliation
-- Python topology, configuration, traffic, and report tools
-- A distributed UDP virtual-port transport
 - Unit, integration, concurrency, fault-injection, and benchmark suites
 - A deterministic headless simulation core
 - A CPU reference simulation backend

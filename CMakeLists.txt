@@ -38,8 +38,11 @@ add_library(silicon_switch
     src/silicon_switch/switching/vlan_ingress.cpp
     src/silicon_switch/switching/vlan_port_config.cpp
     src/silicon_switch/transport/control_protocol.cpp
+    src/silicon_switch/transport/client_synchronizer.cpp
     src/silicon_switch/transport/socket_handle.cpp
+    src/silicon_switch/transport/state_update_protocol.cpp
     src/silicon_switch/transport/tcp.cpp
+    src/silicon_switch/transport/udp.cpp
     src/silicon_switch/version.cpp
 )
 
@@ -130,4 +133,17 @@ if(BUILD_TESTING)
         NAME silicon_switch_unit_tests
         COMMAND silicon_switch_tests
     )
+
+    find_package(Python3 COMPONENTS Interpreter)
+    if(Python3_Interpreter_FOUND)
+        add_test(
+            NAME silicon_switch_python_tests
+            COMMAND ${Python3_EXECUTABLE} -m unittest discover
+                    -s "${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
+                    -p "test_*.py"
+        )
+        set_tests_properties(silicon_switch_python_tests PROPERTIES
+            ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python"
+        )
+    endif()
 endif()

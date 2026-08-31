@@ -23,6 +23,11 @@ compile_commands.json
 *.pdb
 *.so
 
+# Python bytecode and virtual environments.
+__pycache__/
+*.py[cod]
+.venv/
+
 # Test and coverage output.
 Testing/
 *.gcda
