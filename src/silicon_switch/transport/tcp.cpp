@@ -55,7 +55,7 @@ std::optional<TcpError> TcpConnection::send_all(const network::ByteView bytes){
         const auto remaining=bytes.size()-sent;
 #ifdef _WIN32
         const int chunk=::send(socket_.native_handle(),reinterpret_cast<const char*>(bytes.begin()+sent),
-            static_cast<int>(std::min(remaining,static_cast<std::size_t>(std::numeric_limits<int>::max()))),send_flags());
+            static_cast<int>((std::min)(remaining,static_cast<std::size_t>((std::numeric_limits<int>::max)()))),send_flags());
 #else
         const auto chunk=::send(socket_.native_handle(),bytes.begin()+sent,remaining,send_flags());
 #endif
@@ -72,7 +72,7 @@ TcpConnection::ReceiveResult TcpConnection::receive_exact(const std::size_t size
         const auto remaining=size-received;
 #ifdef _WIN32
         const int chunk=::recv(socket_.native_handle(),reinterpret_cast<char*>(bytes.data()+received),
-            static_cast<int>(std::min(remaining,static_cast<std::size_t>(std::numeric_limits<int>::max()))),0);
+            static_cast<int>((std::min)(remaining,static_cast<std::size_t>((std::numeric_limits<int>::max)()))),0);
 #else
         const auto chunk=::recv(socket_.native_handle(),bytes.data()+received,remaining,0);
 #endif
@@ -84,7 +84,7 @@ TcpConnection::ReceiveResult TcpConnection::receive_exact(const std::size_t size
 }
 
 std::optional<TcpError> TcpConnection::send_frame(const network::ByteView payload){
-    if(payload.size()>std::numeric_limits<std::uint32_t>::max())
+    if(payload.size()>(std::numeric_limits<std::uint32_t>::max)())
         return TcpError{TcpErrorCode::message_too_large,{0,"frame exceeds 32-bit length"}};
     std::array<std::uint8_t,4U> header{};
     static_cast<void>(network::wire::write_big_endian<std::uint32_t>(

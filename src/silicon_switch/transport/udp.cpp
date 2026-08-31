@@ -52,7 +52,7 @@ std::variant<std::size_t, UdpError> UdpSocket::send_to_ipv4(
     if (std::holds_alternative<UdpError>(target)) {
         return std::get<UdpError>(target);
     }
-    if (payload.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+    if (payload.size() > static_cast<std::size_t>((std::numeric_limits<int>::max)())) {
         return UdpError{{0, "datagram is too large"}};
     }
     const auto& value = std::get<sockaddr_in>(target);
