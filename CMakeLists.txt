@@ -37,6 +37,9 @@ add_library(silicon_switch
     src/silicon_switch/switching/virtual_port.cpp
     src/silicon_switch/switching/vlan_ingress.cpp
     src/silicon_switch/switching/vlan_port_config.cpp
+    src/silicon_switch/transport/control_protocol.cpp
+    src/silicon_switch/transport/socket_handle.cpp
+    src/silicon_switch/transport/tcp.cpp
     src/silicon_switch/version.cpp
 )
 
@@ -81,6 +84,7 @@ add_executable(silicon_switch_tests
     tests/switching/virtual_port_test.cpp
     tests/switching/vlan_ingress_test.cpp
     tests/switching/vlan_port_config_test.cpp
+    tests/transport/transport_test.cpp
     tests/test_main.cpp
 )
 
@@ -94,6 +98,10 @@ target_link_libraries(silicon_switch_tests
         silicon_switch
         Threads::Threads
 )
+
+if(WIN32)
+    target_link_libraries(silicon_switch PUBLIC ws2_32)
+endif()
 
 function(enable_strict_warnings target_name)
     if(MSVC)

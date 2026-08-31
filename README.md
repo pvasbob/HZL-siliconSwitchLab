@@ -333,15 +333,24 @@ The project currently provides:
     MAC learning, L2 switching/flooding, local ARP, IPv4 routing, ARP resolution,
     Ethernet rewrite, egress queues, virtual-port counters, and global counters
   - exposes queued output packets for deterministic end-to-end testing
+- A cross-platform RAII socket layer
+  - owns Linux file descriptors and Windows Winsock handles safely
+  - initializes Winsock automatically and reports portable socket errors
+- A framed TCP transport
+  - provides IPv4 listen, accept, and connect operations
+  - handles partial sends, partial receives, disconnects, and frame-size limits
+- A versioned control protocol
+  - carries typed commands, request identifiers, and binary payloads
+  - rejects invalid magic, versions, commands, lengths, and truncated messages
 - Tests for valid input, malformed input, boundary values, representation,
   formatting, classification, byte order, ownership, VLAN bit fields,
   tagged/untagged serialization, Internet checksums, and IPv4 packet
   round trips
 
-The current test executable runs 557 checks.
+The current test executable runs 576 checks.
 
-The next milestone will begin cross-platform communication with an RAII socket
-layer for Linux file descriptors and Windows Winsock handles.
+The next milestone will add a versioned UDP transport for distributed virtual
+ports and scene-state updates.
 
 ## Planned capabilities
 
