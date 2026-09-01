@@ -1,11 +1,19 @@
 #include "silicon_switch/visualization/application.hpp"
+#include "silicon_switch/visualization/observer_client.hpp"
 #include "silicon_switch/visualization/topology_renderer.hpp"
 
 #include <GLFW/glfw3.h>
 
+#include <atomic>
+#include <chrono>
 #include <cstdlib>
 #include <iostream>
+#include <mutex>
+#include <optional>
 #include <stdexcept>
+#include <string>
+#include <thread>
+#include <variant>
 
 namespace visualization = silicon_switch::visualization;
 
@@ -90,21 +98,123 @@ private:
     float offset_y_{0.0F};
 };
 
-int main() {
-    try {
-        visualization::TopologyScene scene;
-        scene.upsert_node({1U, -0.65F, 0.15F, 10U, 850U, true, "switch"});
-        scene.upsert_node({2U, 0.0F, 0.55F, 20U, 420U, true, "observer-a"});
-        scene.upsert_node({3U, 0.65F, 0.15F, 20U, 100U, true, "observer-b"});
-        scene.upsert_node({4U, 0.0F, -0.55F, 30U, 0U, false, "observer-c"});
-        scene.upsert_link({1U, 2U, 700U, true});
-        scene.upsert_link({1U, 3U, 250U, true});
-        scene.upsert_link({1U, 4U, 0U, false});
+namespace {
+visualization::TopologyScene demo_scene() {
+    visualization::TopologyScene scene;
+    scene.upsert_node({1U, -0.65F, 0.15F, 10U, 850U, true, "switch"});
+    scene.upsert_node({2U, 0.0F, 0.55F, 20U, 420U, true, "observer-a"});
+    scene.upsert_node({3U, 0.65F, 0.15F, 20U, 100U, true, "observer-b"});
+    scene.upsert_node({4U, 0.0F, -0.55F, 30U, 0U, false, "observer-c"});
+    scene.upsert_link({1U, 2U, 700U, true});
+    scene.upsert_link({1U, 3U, 250U, true});
+    scene.upsert_link({1U, 4U, 0U, false});
+    return scene;
+}
 
+std::optional<std::uint16_t> parse_port(const std::string& value) {
+    try {
+        std::size_t parsed = 0U;
+        const auto port = std::stoul(value, &parsed);
+        if (parsed != value.size() || port == 0U || port > 65'535U) {
+            return std::nullopt;
+        }
+        return static_cast<std::uint16_t>(port);
+    } catch (const std::exception&) {
+        return std::nullopt;
+    }
+}
+}  // namespace
+
+int main(int argc, char** argv) {
+    try {
+        if (argc == 1) {
+            const auto scene = demo_scene();
+            GlfwWindow window;
+            visualization::VisualizationApplication application{window};
+            static_cast<void>(application.run(scene));
+            return EXIT_SUCCESS;
+        }
+
+        std::string address{"0.0.0.0"};
+        std::string name{"observer"};
+        std::optional<std::uint16_t> port;
+        for (int index = 1; index < argc; ++index) {
+            const std::string argument{argv[index]};
+            if ((argument == "--listen" || argument == "--port" || argument == "--name") &&
+                index + 1 >= argc) {
+                port.reset();
+                break;
+            }
+            if (argument == "--listen") {
+                address = argv[++index];
+            } else if (argument == "--port") {
+                port = parse_port(argv[++index]);
+            } else if (argument == "--name") {
+                name = argv[++index];
+            } else {
+                port.reset();
+                break;
+            }
+        }
+        if (!port.has_value()) {
+            std::cerr << "usage: silicon_switch_observer --port PORT "
+                         "[--listen IPv4] [--name NAME]\n";
+            return EXIT_FAILURE;
+        }
+        auto bound = visualization::ObserverClient::bind(address, port.value());
+        if (!std::holds_alternative<visualization::ObserverClient>(bound)) {
+            std::cerr << "failed to bind observer state port\n";
+            return EXIT_FAILURE;
+        }
+        auto client = std::get<visualization::ObserverClient>(std::move(bound));
+        static_cast<void>(client.set_receive_timeout(std::chrono::milliseconds{200}));
+
+        visualization::TopologyScene shared_scene;
+        std::mutex scene_mutex;
+        std::atomic<bool> receiving{true};
+        std::atomic<std::size_t> snapshots{0U};
+        std::atomic<std::size_t> deltas{0U};
+        std::atomic<std::size_t> resyncs{0U};
+        std::atomic<std::uint64_t> revision{0U};
         GlfwWindow window;
-        visualization::VisualizationApplication application{window};
-        static_cast<void>(application.run(scene));
-        return EXIT_SUCCESS;
+        std::thread receiver{
+            [client = std::move(client), &shared_scene, &scene_mutex, &receiving,
+             &snapshots, &deltas, &resyncs, &revision]() mutable {
+                while (receiving.load()) {
+                    const auto result = client.receive_next();
+                    if (result == visualization::ObserverResult::applied_snapshot ||
+                        result == visualization::ObserverResult::applied_delta) {
+                        {
+                            std::lock_guard<std::mutex> lock{scene_mutex};
+                            shared_scene = client.scene();
+                        }
+                        revision.store(client.synchronizer().revision());
+                        if (result == visualization::ObserverResult::applied_snapshot) {
+                            ++snapshots;
+                        } else {
+                            ++deltas;
+                        }
+                    } else if (result == visualization::ObserverResult::resync_required) {
+                        ++resyncs;
+                    }
+                }
+            }};
+
+        while (!window.should_close()) {
+            visualization::TopologyScene frame_scene;
+            {
+                std::lock_guard<std::mutex> lock{scene_mutex};
+                frame_scene = shared_scene;
+            }
+            window.poll_events();
+            window.present(frame_scene);
+        }
+        receiving.store(false);
+        receiver.join();
+        std::cout << "observer=" << name << " snapshots=" << snapshots.load()
+                  << " deltas=" << deltas.load() << " resyncs=" << resyncs.load()
+                  << " revision=" << revision.load() << '\n';
+        return snapshots.load() > 0U ? EXIT_SUCCESS : EXIT_FAILURE;
     } catch (const std::exception& error) {
         std::cerr << "observer error: " << error.what() << '\n';
         return EXIT_FAILURE;

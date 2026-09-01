@@ -385,15 +385,23 @@ The project currently provides:
   - validates one authoritative leader and three uniquely identified observers
   - provides a CLI for broadcast discovery, one-shot advertisement responses,
     receive timeouts, and machine-readable JSON output
+- A four-computer integration scenario
+  - streams the CUDA server's topology snapshots and deltas to three independent
+    Linux and Windows OpenGL observer processes
+  - provides headless observer nodes with synchronization and revision reports
+  - includes the current lab manifest, firewall commands, launch order, and
+    objective acceptance criteria in [SCENARIO_34.md](SCENARIO_34.md)
+  - runs an automated four-process loopback equivalent through CTest
 - Tests for valid input, malformed input, boundary values, representation,
   formatting, classification, byte order, ownership, VLAN bit fields,
   tagged/untagged serialization, Internet checksums, and IPv4 packet
   round trips
 
-The C++ test executable runs 670 checks, and five Python tests cover protocol
-compatibility, configuration loading, process lifecycle, and log collection.
+The C++ test executable runs 670 checks, five Python unit tests cover protocol
+and orchestration behavior, and a four-process integration test verifies three
+independent synchronized observers.
 
-The next milestone will add full multi-computer integration scenarios.
+The next milestone will add performance benchmarking.
 
 ## Planned capabilities
 
@@ -422,6 +430,7 @@ test strategy, and interview-question mapping.
 siliconSwitchLab/
 ├── apps/
 │   ├── discovery/               LAN discovery and configuration CLI
+│   ├── integration_observer/    Headless synchronization reporter
 │   ├── observer/                Optional GLFW/OpenGL observer
 │   ├── simulation_server/       Authoritative scene publisher
 │   └── switch_cli/              CLI executable entry point
@@ -432,6 +441,7 @@ siliconSwitchLab/
 │       ├── simulation/          CPU/CUDA backends and server
 │       └── visualization/       Topology and observer interfaces
 ├── python/                      Control and process orchestration package
+├── config/                      Four-computer lab manifest
 ├── src/
 │   └── silicon_switch/          Library implementations
 │       ├── network/
@@ -445,6 +455,7 @@ siliconSwitchLab/
 ├── docs/                        Learning, architecture, and design notes
 ├── CMakeLists.txt
 ├── PROJECT_PLAN.txt
+├── SCENARIO_34.md
 └── README.md
 ```
 

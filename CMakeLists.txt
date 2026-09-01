@@ -99,6 +99,11 @@ target_link_libraries(silicon_switch_discovery PRIVATE silicon_switch)
 add_executable(silicon_switch_server
     apps/simulation_server/main.cpp
 )
+
+add_executable(silicon_switch_observer_node
+    apps/integration_observer/main.cpp
+)
+target_link_libraries(silicon_switch_observer_node PRIVATE silicon_switch)
 target_link_libraries(silicon_switch_server
     PRIVATE
         silicon_switch
@@ -187,6 +192,7 @@ enable_strict_warnings(silicon_switch)
 enable_strict_warnings(silicon_switch_cli)
 enable_strict_warnings(silicon_switch_discovery)
 enable_strict_warnings(silicon_switch_server)
+enable_strict_warnings(silicon_switch_observer_node)
 enable_strict_warnings(silicon_switch_tests)
 if(TARGET silicon_switch_observer)
     enable_strict_warnings(silicon_switch_observer)
@@ -210,6 +216,16 @@ if(BUILD_TESTING)
         )
         set_tests_properties(silicon_switch_python_tests PROPERTIES
             ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python"
+        )
+        add_test(
+            NAME silicon_switch_four_process_integration
+            COMMAND ${Python3_EXECUTABLE}
+                    "${CMAKE_CURRENT_SOURCE_DIR}/tests/integration/four_process_scenario.py"
+                    --server $<TARGET_FILE:silicon_switch_server>
+                    --observer $<TARGET_FILE:silicon_switch_observer_node>
+        )
+        set_tests_properties(silicon_switch_four_process_integration PROPERTIES
+            TIMEOUT 20
         )
     endif()
 endif()

@@ -5,7 +5,9 @@
 #include "silicon_switch/visualization/topology.hpp"
 
 #include <cstddef>
+#include <chrono>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <utility>
 #include <variant>
@@ -35,6 +37,10 @@ public:
     [[nodiscard]] static BindResult bind(const std::string& address, std::uint16_t port);
     [[nodiscard]] ObserverResult receive_next();
     [[nodiscard]] ObserverResult consume_datagram(network::ByteView bytes);
+    [[nodiscard]] std::optional<transport::UdpError> set_receive_timeout(
+        std::chrono::milliseconds timeout) {
+        return socket_.set_receive_timeout(timeout);
+    }
     [[nodiscard]] std::uint16_t local_port() const { return socket_.local_port(); }
     [[nodiscard]] const TopologyScene& scene() const noexcept { return scene_; }
     [[nodiscard]] const transport::ClientSynchronizer& synchronizer() const noexcept {
