@@ -1,0 +1,28 @@
+{
+  "benchmark_leader": {
+    "name": "gpu-desktop",
+    "address": "192.168.12.185",
+    "platform": "linux",
+    "udp_port": 8100
+  },
+  "peers": [
+    {
+      "name": "windows-laptop-1",
+      "address": "192.168.12.199",
+      "platform": "windows",
+      "udp_port": 8101
+    },
+    {
+      "name": "windows-laptop-2",
+      "address": "192.168.12.216",
+      "platform": "windows",
+      "udp_port": 8102
+    },
+    {
+      "name": "linux-laptop",
+      "address": "192.168.12.159",
+      "platform": "linux",
+      "udp_port": 8103
+    }
+  ]
+}

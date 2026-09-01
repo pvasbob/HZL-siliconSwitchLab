@@ -73,25 +73,24 @@ std::optional<Ipv4Address> Ipv4Address::parse(
 
 std::string Ipv4Address::to_string() const {
     constexpr std::size_t maximum_text_length = 15;
-    std::array<char, maximum_text_length> buffer{};
-    char* write_position = buffer.data();
-    char* const buffer_end = buffer.data() + buffer.size();
+    std::string text;
+    text.reserve(maximum_text_length);
     const Octets address_octets = octets();
 
     for (std::size_t index = 0; index < octet_count; ++index) {
+        std::array<char, 3U> octet_text{};
         const auto conversion = std::to_chars(
-            write_position,
-            buffer_end,
+            octet_text.data(),
+            octet_text.data() + octet_text.size(),
             static_cast<unsigned int>(address_octets[index]));
-        write_position = conversion.ptr;
+        text.append(octet_text.data(), conversion.ptr);
 
         if (index + 1 < octet_count) {
-            *write_position = '.';
-            ++write_position;
+            text.push_back('.');
         }
     }
 
-    return std::string{buffer.data(), write_position};
+    return text;
 }
 
 }  // namespace silicon_switch::network

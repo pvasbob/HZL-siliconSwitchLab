@@ -91,6 +91,11 @@ add_executable(silicon_switch_cli
     apps/switch_cli/main.cpp
 )
 
+add_executable(silicon_switch_benchmark
+    apps/benchmark/main.cpp
+)
+target_link_libraries(silicon_switch_benchmark PRIVATE silicon_switch)
+
 add_executable(silicon_switch_discovery
     apps/discovery/main.cpp
 )
@@ -190,6 +195,7 @@ endfunction()
 
 enable_strict_warnings(silicon_switch)
 enable_strict_warnings(silicon_switch_cli)
+enable_strict_warnings(silicon_switch_benchmark)
 enable_strict_warnings(silicon_switch_discovery)
 enable_strict_warnings(silicon_switch_server)
 enable_strict_warnings(silicon_switch_observer_node)
@@ -227,5 +233,12 @@ if(BUILD_TESTING)
         set_tests_properties(silicon_switch_four_process_integration PROPERTIES
             TIMEOUT 20
         )
+        add_test(
+            NAME silicon_switch_benchmark_smoke
+            COMMAND ${Python3_EXECUTABLE}
+                    "${CMAKE_CURRENT_SOURCE_DIR}/tests/integration/benchmark_smoke.py"
+                    --benchmark $<TARGET_FILE:silicon_switch_benchmark>
+        )
+        set_tests_properties(silicon_switch_benchmark_smoke PROPERTIES TIMEOUT 20)
     endif()
 endif()

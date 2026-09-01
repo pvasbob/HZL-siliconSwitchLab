@@ -392,6 +392,14 @@ The project currently provides:
   - includes the current lab manifest, firewall commands, launch order, and
     objective acceptance criteria in [SCENARIO_34.md](SCENARIO_34.md)
   - runs an automated four-process loopback equivalent through CTest
+- A reproducible performance benchmark suite
+  - measures CPU/CUDA simulation, software forwarding, render preparation, and
+    bounded-queue throughput
+  - measures cross-machine UDP loss, effective bandwidth, and average, p50,
+    p95, and p99 round-trip latency with machine-readable JSON results
+  - reports actual OpenGL observer FPS alongside synchronization and resync
+    counters
+  - documents the exact four-computer procedure in [BENCHMARKS.md](BENCHMARKS.md)
 - Tests for valid input, malformed input, boundary values, representation,
   formatting, classification, byte order, ownership, VLAN bit fields,
   tagged/untagged serialization, Internet checksums, and IPv4 packet
@@ -401,7 +409,7 @@ The C++ test executable runs 670 checks, five Python unit tests cover protocol
 and orchestration behavior, and a four-process integration test verifies three
 independent synchronized observers.
 
-The next milestone will add performance benchmarking.
+The next milestone will add reliability, recovery, and fault-injection tests.
 
 ## Planned capabilities
 
@@ -430,6 +438,7 @@ test strategy, and interview-question mapping.
 siliconSwitchLab/
 ├── apps/
 │   ├── discovery/               LAN discovery and configuration CLI
+│   ├── benchmark/               Reproducible compute and network benchmarks
 │   ├── integration_observer/    Headless synchronization reporter
 │   ├── observer/                Optional GLFW/OpenGL observer
 │   ├── simulation_server/       Authoritative scene publisher
@@ -454,6 +463,7 @@ siliconSwitchLab/
 │   └── visualization/           Headless rendering and observer tests
 ├── docs/                        Learning, architecture, and design notes
 ├── CMakeLists.txt
+├── BENCHMARKS.md
 ├── PROJECT_PLAN.txt
 ├── SCENARIO_34.md
 └── README.md

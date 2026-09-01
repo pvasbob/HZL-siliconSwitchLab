@@ -131,7 +131,12 @@ int main(int argc, char** argv) {
             const auto scene = demo_scene();
             GlfwWindow window;
             visualization::VisualizationApplication application{window};
-            static_cast<void>(application.run(scene));
+            const auto started = std::chrono::steady_clock::now();
+            const auto frames = application.run(scene);
+            const auto elapsed = std::chrono::duration<double>(
+                std::chrono::steady_clock::now() - started).count();
+            std::cout << "frames=" << frames << " fps="
+                      << static_cast<double>(frames) / elapsed << '\n';
             return EXIT_SUCCESS;
         }
 
@@ -200,6 +205,8 @@ int main(int argc, char** argv) {
                 }
             }};
 
+        std::uint64_t frames = 0U;
+        const auto started = std::chrono::steady_clock::now();
         while (!window.should_close()) {
             visualization::TopologyScene frame_scene;
             {
@@ -208,12 +215,17 @@ int main(int argc, char** argv) {
             }
             window.poll_events();
             window.present(frame_scene);
+            ++frames;
         }
         receiving.store(false);
         receiver.join();
         std::cout << "observer=" << name << " snapshots=" << snapshots.load()
                   << " deltas=" << deltas.load() << " resyncs=" << resyncs.load()
-                  << " revision=" << revision.load() << '\n';
+                  << " revision=" << revision.load() << " frames=" << frames
+                  << " fps=" << static_cast<double>(frames) /
+                      std::chrono::duration<double>(
+                          std::chrono::steady_clock::now() - started).count()
+                  << '\n';
         return snapshots.load() > 0U ? EXIT_SUCCESS : EXIT_FAILURE;
     } catch (const std::exception& error) {
         std::cerr << "observer error: " << error.what() << '\n';
