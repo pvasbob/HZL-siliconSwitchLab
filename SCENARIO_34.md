@@ -30,7 +30,13 @@ New-NetFirewallRule -DisplayName "Silicon Switch State 8002" -Direction Inbound 
 
 ## Live OpenGL scenario
 
-Start all three observers before starting the server.
+Start all four display processes before starting the server.
+
+Linux RTX 3080 leader display:
+
+```bash
+./build-cuda/silicon_switch_observer --listen 0.0.0.0 --port 8000 --name gpu-desktop
+```
 
 Windows observer 1:
 
@@ -55,14 +61,30 @@ Linux RTX 3080 leader:
 ```bash
 ./build-cuda/silicon_switch_server \
   --backend cuda --hz 30 --ticks 900 \
+  --observer 192.168.12.185:8000 \
   --observer 192.168.12.199:8001 \
   --observer 192.168.12.216:8002 \
   --observer 192.168.12.159:8003
 ```
 
-All three windows must animate the same topology. After the server reports 900
-published revisions, press Escape in every observer. Each observer prints its
+All four windows must animate the same topology. After the server reports 900
+published revisions, press Escape in every display. Each observer prints its
 snapshot, delta, resynchronization, and final-revision counters.
+
+## Verified physical result
+
+The four-computer scenario was verified on August 31, 2026 with a 300-revision
+CUDA run:
+
+| Display | Snapshots | Deltas | Resync events | Final revision |
+|---|---:|---:|---:|---:|
+| RTX 3080 leader | 6 | 294 | 0 | 300 |
+| Windows observer 1 | 6 | 294 | 0 | 300 |
+| Windows observer 2 | 6 | 258 | 35 | 300 |
+| Linux observer | 6 | 294 | 0 | 300 |
+
+Windows observer 2 detected UDP loss, rejected unsafe deltas, and recovered at
+a periodic snapshot. All four displays converged on authoritative revision 300.
 
 ## Headless acceptance run
 

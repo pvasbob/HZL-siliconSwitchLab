@@ -386,8 +386,8 @@ The project currently provides:
   - provides a CLI for broadcast discovery, one-shot advertisement responses,
     receive timeouts, and machine-readable JSON output
 - A four-computer integration scenario
-  - streams the CUDA server's topology snapshots and deltas to three independent
-    Linux and Windows OpenGL observer processes
+  - streams the CUDA server's topology snapshots and deltas to a local leader
+    display and three independent Linux and Windows OpenGL observer processes
   - provides headless observer nodes with synchronization and revision reports
   - includes the current lab manifest, firewall commands, launch order, and
     objective acceptance criteria in [SCENARIO_34.md](SCENARIO_34.md)
