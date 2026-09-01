@@ -1,0 +1,74 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "linux-release",
+      "displayName": "Linux CPU Release",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/linux-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "SILICON_SWITCH_ENABLE_CUDA": "OFF"
+      }
+    },
+    {
+      "name": "linux-sanitized",
+      "displayName": "Linux ASan and UBSan",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/linux-sanitized",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "SILICON_SWITCH_ENABLE_CUDA": "OFF",
+        "SILICON_SWITCH_ENABLE_SANITIZERS": "ON"
+      }
+    },
+    {
+      "name": "windows-vs2019",
+      "displayName": "Windows Visual Studio 2019 x64",
+      "generator": "Visual Studio 16 2019",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build/windows-vs2019",
+      "cacheVariables": {
+        "SILICON_SWITCH_ENABLE_CUDA": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "linux-release",
+      "configurePreset": "linux-release"
+    },
+    {
+      "name": "linux-sanitized",
+      "configurePreset": "linux-sanitized"
+    },
+    {
+      "name": "windows-vs2019",
+      "configurePreset": "windows-vs2019",
+      "configuration": "Release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "linux-release",
+      "configurePreset": "linux-release",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "linux-sanitized",
+      "configurePreset": "linux-sanitized",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "windows-vs2019",
+      "configurePreset": "windows-vs2019",
+      "configuration": "Release",
+      "output": { "outputOnFailure": true }
+    }
+  ]
+}

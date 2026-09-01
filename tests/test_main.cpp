@@ -37,7 +37,7 @@ int main() {
     silicon_switch::test::TestSuite suite;
 
     suite.expect_equal(
-        silicon_switch::version(), std::string_view{"0.1.0"}, "library version");
+        silicon_switch::version(), std::string_view{"1.0.0"}, "library version");
     silicon_switch::test::run_bounded_queue_tests(suite);
     silicon_switch::test::run_fault_injector_tests(suite);
     silicon_switch::test::run_programmable_switch_tests(suite);

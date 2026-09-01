@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 project(
     SiliconSwitchLab
-    VERSION 0.1.0
+    VERSION 1.0.0
     DESCRIPTION "An educational software model of a network switch ASIC"
     LANGUAGES CXX
 )
@@ -10,6 +10,26 @@ project(
 find_package(Threads REQUIRED)
 
 option(SILICON_SWITCH_ENABLE_CUDA "Build the optional CUDA simulation backend" ON)
+option(SILICON_SWITCH_ENABLE_SANITIZERS
+       "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
+option(SILICON_SWITCH_ENABLE_CLANG_TIDY "Run clang-tidy while compiling" OFF)
+
+if(SILICON_SWITCH_ENABLE_SANITIZERS)
+    if(MSVC)
+        message(FATAL_ERROR "Combined address/undefined sanitizers require GCC or Clang")
+    endif()
+    add_compile_options(
+        $<$<COMPILE_LANGUAGE:CXX>:-fsanitize=address,undefined>
+        $<$<COMPILE_LANGUAGE:CXX>:-fno-omit-frame-pointer>
+    )
+    add_link_options(-fsanitize=address,undefined)
+endif()
+
+if(SILICON_SWITCH_ENABLE_CLANG_TIDY)
+    find_program(SILICON_SWITCH_CLANG_TIDY_EXECUTABLE NAMES clang-tidy REQUIRED)
+    set(CMAKE_CXX_CLANG_TIDY "${SILICON_SWITCH_CLANG_TIDY_EXECUTABLE}")
+endif()
+
 set(SILICON_SWITCH_CUDA_SOURCE
     src/silicon_switch/simulation/cuda_backend_stub.cpp
 )
@@ -95,6 +115,11 @@ add_executable(silicon_switch_benchmark
     apps/benchmark/main.cpp
 )
 target_link_libraries(silicon_switch_benchmark PRIVATE silicon_switch)
+
+add_executable(silicon_switch_demo
+    apps/demo/main.cpp
+)
+target_link_libraries(silicon_switch_demo PRIVATE silicon_switch)
 
 add_executable(silicon_switch_discovery
     apps/discovery/main.cpp
@@ -196,6 +221,7 @@ endfunction()
 enable_strict_warnings(silicon_switch)
 enable_strict_warnings(silicon_switch_cli)
 enable_strict_warnings(silicon_switch_benchmark)
+enable_strict_warnings(silicon_switch_demo)
 enable_strict_warnings(silicon_switch_discovery)
 enable_strict_warnings(silicon_switch_server)
 enable_strict_warnings(silicon_switch_observer_node)
@@ -210,6 +236,10 @@ if(BUILD_TESTING)
     add_test(
         NAME silicon_switch_unit_tests
         COMMAND silicon_switch_tests
+    )
+    add_test(
+        NAME silicon_switch_interview_demo
+        COMMAND silicon_switch_demo
     )
 
     find_package(Python3 COMPONENTS Interpreter)
@@ -240,5 +270,45 @@ if(BUILD_TESTING)
                     --benchmark $<TARGET_FILE:silicon_switch_benchmark>
         )
         set_tests_properties(silicon_switch_benchmark_smoke PROPERTIES TIMEOUT 20)
+        add_test(
+            NAME silicon_switch_reliability_recovery
+            COMMAND ${Python3_EXECUTABLE}
+                    "${CMAKE_CURRENT_SOURCE_DIR}/tests/integration/reliability_recovery.py"
+                    --server $<TARGET_FILE:silicon_switch_server>
+                    --observer $<TARGET_FILE:silicon_switch_observer_node>
+        )
+        set_tests_properties(silicon_switch_reliability_recovery PROPERTIES TIMEOUT 20)
     endif()
 endif()
+
+include(GNUInstallDirs)
+install(
+    TARGETS
+        silicon_switch
+        silicon_switch_cli
+        silicon_switch_benchmark
+        silicon_switch_demo
+        silicon_switch_discovery
+        silicon_switch_server
+        silicon_switch_observer_node
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+if(TARGET silicon_switch_observer)
+    install(TARGETS silicon_switch_observer
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES README.md ARCHITECTURE.md DEMO.md RELEASE.md BENCHMARKS.md
+              SCENARIO_34.md PROJECT_PLAN.txt
+        DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(DIRECTORY config/
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/silicon-switch-lab/config)
+
+set(CPACK_PACKAGE_NAME "SiliconSwitchLab")
+set(CPACK_PACKAGE_VENDOR "Silicon Switch Lab")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY ${PROJECT_DESCRIPTION})
+set(CPACK_GENERATOR "TGZ;ZIP")
+include(CPack)

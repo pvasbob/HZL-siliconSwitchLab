@@ -1,12 +1,10 @@
 # Silicon Switch Lab
 
-> **Project status: IN PROGRESS**
+> **Project status: CORE RELEASE COMPLETE (1.0.0)**
 >
-> The repository is being developed incrementally. The
-> [Current implementation](#current-implementation) section identifies what
-> works today; the [Final product goal](#final-product-goal) and
-> [Definition of final success](#definition-of-final-success) describe the
-> intended completed system.
+> The C++17 four-computer synchronization release is implemented. See
+> [RELEASE.md](RELEASE.md) for the one-time cross-platform acceptance run and
+> [ARCHITECTURE.md](ARCHITECTURE.md) for boundaries and limitations.
 
 Silicon Switch Lab is a cross-platform C++17, Python, CUDA, OpenGL, and
 networking project that models the software stack surrounding a programmable
@@ -27,12 +25,11 @@ applications display synchronized OpenGL views of the same evolving scene. The
 GPU workstation will control the simulation; the other computers will be
 read-only observers with independent or leader-following cameras.
 
-Scene updates will not bypass the networking work. They will be serialized into
-a versioned protocol and carried through a hardware-inspired `SoftwareAsic`
-that implements Ethernet and VLAN parsing, MAC learning, L2 switching, ARP,
-IPv4 routing, longest-prefix matching, next hops, ACLs, bounded queues,
-congestion drops, and counters. Loss, reordering, disconnection, hardware
-failure, and state divergence will be detectable and testable.
+Scene updates use a versioned UDP protocol beside a hardware-inspired
+`SoftwareAsic` workload that implements Ethernet and VLAN parsing, MAC learning,
+L2 switching, ARP, IPv4 routing, longest-prefix matching, next hops, bounded
+queues, congestion drops, and counters. Loss, reordering, disconnection,
+hardware failure, and state divergence are detectable and testable.
 
 A SAI-inspired control layer and `HardwareInterface` class hierarchy will
 separate portable control-plane intent from the software-ASIC and
@@ -49,9 +46,7 @@ Leader changes simulation state on Linux GPU workstation
         |
 CPU/CUDA backend produces authoritative scene revision
         |
-Versioned scene update is serialized
-        |
-SoftwareAsic switches or routes it through tested L2/L3 behavior
+Versioned scene update is serialized and published over UDP
         |
 Linux and Windows observers validate and apply the revision
         |
@@ -406,25 +401,22 @@ The project currently provides:
   round trips
 
 The C++ test executable runs 670 checks, five Python unit tests cover protocol
-and orchestration behavior, and a four-process integration test verifies three
-independent synchronized observers.
+and orchestration behavior, and CTest registers interview-demo, four-process,
+benchmark, and reliability/recovery scenarios.
 
-The next milestone will add reliability, recovery, and fault-injection tests.
+Reliability/recovery, benchmark, sanitizer, CI, interview-demo, documentation,
+and packaging support are included in the 1.0 release.
 
-## Planned capabilities
+## Possible future extensions
 
-Later milestones will add:
+The following are optional extensions rather than requirements for the core
+four-computer release:
 
-- ARP/neighbor state and IPv4 routing
-- Route, next-hop, and ECMP objects
+- ECMP route groups
 - ACL-style match/action rules
 - Thread-safe worker pipelines and graceful shutdown
 - Desired-state and observed-state reconciliation
-- Unit, integration, concurrency, fault-injection, and benchmark suites
-- CPU/GPU correctness comparison and performance measurement
-- Versioned full-scene snapshots and incremental scene updates
-- Scene revision, sequence, timestamp, and resynchronization handling
-- Independent and leader-following camera modes
+- Leader-following camera mode
 - Capability negotiation and level-of-detail selection for observer computers
 - Bandwidth-aware sampling, quantization, or compression experiments
 - An optional encoded-video fallback for scenes too large to replicate
@@ -439,6 +431,7 @@ siliconSwitchLab/
 ├── apps/
 │   ├── discovery/               LAN discovery and configuration CLI
 │   ├── benchmark/               Reproducible compute and network benchmarks
+│   ├── demo/                    Deterministic interview scenario
 │   ├── integration_observer/    Headless synchronization reporter
 │   ├── observer/                Optional GLFW/OpenGL observer
 │   ├── simulation_server/       Authoritative scene publisher
@@ -463,9 +456,12 @@ siliconSwitchLab/
 │   └── visualization/           Headless rendering and observer tests
 ├── docs/                        Learning, architecture, and design notes
 ├── CMakeLists.txt
+├── ARCHITECTURE.md
 ├── BENCHMARKS.md
+├── DEMO.md
 ├── PROJECT_PLAN.txt
 ├── SCENARIO_34.md
+├── RELEASE.md
 └── README.md
 ```
 
@@ -484,7 +480,7 @@ into oversized source files.
 ### Windows
 
 - CMake 3.20 or newer
-- Visual Studio 2022 with the Desktop development with C++ workload, or another
+- Visual Studio 2019 or newer with the Desktop development with C++ workload, or another
   C++17-capable compiler
 
 Python 3 is required for the orchestration tools. CUDA remains optional and is
@@ -510,7 +506,7 @@ Run the CLI:
 Expected output:
 
 ```text
-Silicon Switch Lab 0.1.0
+Silicon Switch Lab 1.0.0
 ```
 
 Run a finite CPU simulation and publish to an observer:
